@@ -37,7 +37,7 @@ class PosCommandHandler {
         const focusedValue = this.interaction.options.getFocused();
         const choices = [];
         items.forEach((item) => {
-          choices.push(item.name.toLocaleLowerCase());
+          choices.push(item.name.toLowerCase());
         });
         const filtered = choices.filter((choice) =>
           choice.startsWith(focusedValue)
