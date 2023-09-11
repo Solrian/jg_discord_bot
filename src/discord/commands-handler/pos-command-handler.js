@@ -30,7 +30,7 @@ class PosCommandHandler {
       if (this.interaction.isChatInputCommand()) {
         await this.interaction.deferReply({ ephemeral: true });
         await this.interaction.editReply({
-          content: `${interaction.options.get("item").value}`,
+          content: `${this.interaction.options.get("item").value}`,
           ephemeral: true,
         });
       } else if (this.interaction.isAutocomplete()) {
