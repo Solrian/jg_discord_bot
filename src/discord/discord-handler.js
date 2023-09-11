@@ -2,8 +2,8 @@ import { config } from "dotenv";
 import { REST, Routes, Client, IntentsBitField } from "discord.js";
 import bpcCommands from "./commands/bpc-command.js";
 import posCommands from "./commands/pos-command.js";
-import posCommandHandler from "./commands-handler/pos-command-handler.js";
-import bpcCommandHandler from "./commands-handler/bpc-command-handler.js";
+import { PosCommandHandler } from "./commands-handler/pos-command-handler.js";
+import { BpcCommandHandler } from "./commands-handler/bpc-command-handler.js";
 
 class DiscordHandler {
   constructor(databaseHandler) {
@@ -42,9 +42,11 @@ class DiscordHandler {
     this.client.on("interactionCreate", async (interaction) => {
       try {
         if (interaction.commandName == "pos") {
-          posCommandHandler(interaction);
+          const posHandler = new PosCommandHandler(interaction);
+          await posHandler.run();
         } else if (interaction.commandName == "bpc") {
-          bpcCommandHandler(interaction);
+          const bpcHandler = new BpcCommandHandler(interaction);
+          await bpcHandler.run();
         }
       } catch (err) {
         console.log(err);
