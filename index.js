@@ -1,4 +1,6 @@
-import { DiscordHandler } from './src/discord-handler.js';
+import { DiscordHandler } from "./src/discord/discord-handler.js";
+import { DatabaseHandler } from "./src/database-handler.js";
 
-const discordHandler = new DiscordHandler();
+const databaseHandler = new DatabaseHandler();
+const discordHandler = new DiscordHandler(databaseHandler);
 discordHandler.startAsync();
