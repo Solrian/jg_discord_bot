@@ -11,7 +11,8 @@
   "dependencies": {
     "@discordjs/builders": "^1.6.5",
     "discord.js": "^14.13.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "mysql": "^2.18.1"
   },
   "type": "module"
 }
