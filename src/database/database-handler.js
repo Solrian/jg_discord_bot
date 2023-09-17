@@ -1,7 +1,10 @@
-import mysql from "./database/mysql.js";
+import mysql from "./mysql.js";
 
 class DatabaseHandler {
-  constructor() {}
+  constructor() {
+    this.name = "DatabaseHandler";
+  }
+
   async Test(timespan) {
     const connection = await mysql.connection();
     try {
@@ -15,7 +18,7 @@ class DatabaseHandler {
       await connection.query("ROLLBACK");
       if (err) console.error(err);
     } finally {
-      await connection.release;
+      await connection.release();
     }
   }
 
