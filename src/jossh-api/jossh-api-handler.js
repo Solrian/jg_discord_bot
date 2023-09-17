@@ -1,12 +1,15 @@
 import axios from "axios";
+import EventEmitter from "events";
 
 const minTimeout = 20000;
 let lastMissionsTS;
 let newMissionsTS;
+const eventEmitter = new EventEmitter();
 
 class JosshApiHandler {
   constructor() {
     this.name = "JosshApiHandler";
+    this.updateDoneEvent = eventEmitter;
     doInterval();
   }
 }
@@ -21,8 +24,9 @@ async function doInterval() {
     // Do Updating Stuff here
 
     lastMissionsTS = newMissionsTS;
+    eventEmitter.emit("success");
   } else {
-    console.log("no update found");
+    eventEmitter.emit("nodata");
   }
   let endTS = Date.now();
   console.log("time needed: " + (endTS - startTS) + "ms");

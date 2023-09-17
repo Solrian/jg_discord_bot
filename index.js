@@ -2,14 +2,20 @@ import { DiscordHandler } from "./src/discord/discord-handler.js";
 import { DatabaseHandler } from "./src/database/database-handler.js";
 import { JosshApiHandler } from "./src/jossh-api/jossh-api-handler.js";
 import readline from "readline";
+import EventEmitter from "events";
 
 const josshApiHandler = new JosshApiHandler();
 const databaseHandler = new DatabaseHandler();
 const discordHandler = new DiscordHandler(databaseHandler);
 
-//databaseHandler.AddNewGeneration();
-//let tmp = await databaseHandler.Test("7 day");
-// console.log(tmp);
+const updateEvent = josshApiHandler.updateDoneEvent;
+
+updateEvent.on("success", () => {
+  console.log("new data logged.");
+});
+updateEvent.on("nodata", () => {
+  console.log("no new data found.");
+});
 
 var rl = readline.createInterface({
   input: process.stdin,
@@ -19,10 +25,16 @@ var rl = readline.createInterface({
 function terminalInput() {
   rl.question("", (input) => {
     if (input == "exit") return rl.close();
-    console.log(`Command to execute: ${input}`);
-    if (input == "dbtables") databaseHandler.listTables();
-    else if (input == "createdbtables") databaseHandler.createTables();
-    else if (input == "dropdbtables") databaseHandler.dropTables();
+    if (input == "listtables") {
+      console.log(`executing: ${input}`);
+      databaseHandler.listTables();
+    } else if (input == "createtables") {
+      console.log(`executing: ${input}`);
+      databaseHandler.createTables();
+    } else if (input == "droptables") {
+      console.log(`executing: ${input}`);
+      databaseHandler.dropTables();
+    }
     terminalInput();
   });
 }
