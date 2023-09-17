@@ -3,7 +3,7 @@ import EventEmitter from "events";
 
 const minTimeout = 20000;
 let lastMissionsTS;
-let newMissionsTS;
+let currentMissionsTS;
 const eventEmitter = new EventEmitter();
 
 class JosshApiHandler {
@@ -18,12 +18,12 @@ async function doInterval() {
   let timeout = minTimeout;
   let startTS = Date.now();
   let missions = await getMissions();
-  if (missions != null) newMissionsTS = missions.last_update;
-  if (lastMissionsTS == null || lastMissionsTS != newMissionsTS) {
+  if (missions != null) currentMissionsTS = missions.last_update;
+  if (lastMissionsTS == null || lastMissionsTS != currentMissionsTS) {
     if (lastMissionsTS != null) timeout = 359000;
     // Do Updating Stuff here
 
-    lastMissionsTS = newMissionsTS;
+    lastMissionsTS = currentMissionsTS;
     eventEmitter.emit("success");
   } else {
     eventEmitter.emit("nodata");

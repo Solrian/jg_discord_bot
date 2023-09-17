@@ -6,24 +6,6 @@ class DatabaseHandler {
   constructor() {
     this.name = "DatabaseHandler";
   }
-
-  async Test(timespan) {
-    const connection = await mysql.connection();
-    try {
-      await connection.query("START TRANSACTION");
-      let rows = await connection.query(
-        `Select max(generation) as gen from timelog where time > (now() - interval ${timespan})`
-      );
-      console.log(rows);
-      await connection.query("COMMIT");
-    } catch (err) {
-      await connection.query("ROLLBACK");
-      if (err) console.error(err);
-    } finally {
-      await connection.release();
-    }
-  }
-
   async listTables() {
     const connection = await mysql.connection();
     try {
@@ -173,32 +155,6 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-
-  AddNewGeneration() {
-    this.pool.query(
-      "Insert into timelog (generation) values (0)",
-      function (err, results) {
-        if (err) console.error(err);
-      }
-    );
-  }
-
-  async SelectMaxGeneration(timespan) {
-    this.pool.query(
-      `Select max(generation) as gen from timelog where time > (now() - interval ${timespan})`,
-      function (err, results) {
-        if (err) {
-          console.error(err);
-          return null;
-        }
-        if (results != null) {
-          console.log(results[0].gen);
-          return results[0].gen;
-        }
-      }
-    );
-  }
-  InsertIntoTimelog() {}
 }
 
 export { DatabaseHandler };
