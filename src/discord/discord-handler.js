@@ -19,6 +19,7 @@ class DiscordHandler {
     this.rest = new REST({ version: "10" }).setToken(
       process.env.DISCORD_BOT_TOKEN
     );
+    this.startAsync();
   }
 
   async startAsync() {
