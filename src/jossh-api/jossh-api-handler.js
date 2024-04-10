@@ -9,36 +9,65 @@ const eventEmitter = new EventEmitter();
 class JosshApiHandler {
   constructor() {
     this.name = "JosshApiHandler";
-    this.updateDoneEvent = eventEmitter;
-    doInterval();
+    this.updateFoundEvent = eventEmitter;
+    checkForUpdate();
+  }
+  async getCurrentTS() {
+    return await getMissionsTS();
+  }
+  async getPilot(callsign) {
+    return await getPilotProfile(callsign);
+  }
+  async getUsers() {
+    return await getAllUsers();
   }
 }
 
-async function doInterval() {
+async function checkForUpdate() {
   let timeout = minTimeout;
   let startTS = Date.now();
-  let missions = await getMissions();
-  if (missions != null) currentMissionsTS = missions.last_update;
+  let missionsTS = await getMissionsTS();
+  if (missionsTS != null) currentMissionsTS = missionsTS;
   if (lastMissionsTS == null || lastMissionsTS != currentMissionsTS) {
     if (lastMissionsTS != null) timeout = 359000;
-    // Do Updating Stuff here
-
     lastMissionsTS = currentMissionsTS;
-    eventEmitter.emit("success");
-  } else {
-    eventEmitter.emit("nodata");
+    eventEmitter.emit("newdata");
   }
   let endTS = Date.now();
   console.log("time needed: " + (endTS - startTS) + "ms");
   timeout = timeout - (endTS - startTS);
   if (timeout < minTimeout) timeout = minTimeout;
   console.log("next interval: " + timeout + "ms");
-  setTimeout(doInterval, timeout);
+  setTimeout(checkForUpdate, timeout);
 }
 
-async function getMissions() {
+async function getMissionsTS() {
   try {
     let url = "http://jumpgate-tri.org/jossh-api/missions.json";
+    const { data } = await axios.get(url);
+    return data.last_update;
+  } catch (error) {
+    return console.error(error);
+  }
+}
+
+async function getPilotProfile(callsign) {
+  try {
+    let url =
+      "http://jumpgate-tri.org/jossh-api/user-profile/" + callsign + ".json";
+    const { data } = await axios.get(url);
+    return data;
+  } catch (error) {
+    if (error.response) {
+      console.log(error.response.status + " " + callsign);
+      return await getPilotProfile(callsign);
+    }
+  }
+}
+
+async function getAllUsers() {
+  try {
+    let url = "http://jumpgate-tri.org/jossh-api/all-users.json";
     const { data } = await axios.get(url);
     return data;
   } catch (error) {
