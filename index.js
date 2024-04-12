@@ -16,11 +16,11 @@ updateEvent.on("newdata", async () => {
   let lastTS = await databaseHandler.getCurrentTS();
   if (lastTS == null) {
     await databaseHandler.addNewGeneration(currentTS);
-    await pilotManger.initializePilots(currentTS);
+    await pilotManger.initializePilots();
   } else if (currentTS != lastTS) {
     if (!pilotManger.isUpdating) {
       await databaseHandler.addNewGeneration(currentTS);
-      await pilotManger.updatePilots(currentTS, lastTS);
+      await pilotManger.updatePilots(lastTS);
     } else console.log("Update Suspended - previous Update still running");
   }
 });

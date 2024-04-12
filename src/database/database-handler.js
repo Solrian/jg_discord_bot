@@ -191,6 +191,22 @@ class DatabaseHandler {
       await connection.release();
     }
   }
+  async getBeaconPilots() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `SELECT distinct callsign from pilot_changes where generation <= 26 and stat='isOnline'`
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
   async insertPilotProfile(pilot) {
     const connection = await mysql.connection();
     try {
