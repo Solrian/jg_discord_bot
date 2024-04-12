@@ -164,7 +164,8 @@ class DatabaseHandler {
       connection.query(`update pilots set generation = generation + 1`);
       connection.query(`update pilot_changes set generation = generation + 1`);
       connection.query(
-        `insert into timelog (generation, time) values (0,'` + timestamp + `')`
+        `insert into timelog (generation, time) values (0,?)`,
+        timestamp
       );
       await connection.query("COMMIT");
     } catch (err) {
@@ -194,6 +195,42 @@ class DatabaseHandler {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
+      let values = [
+        pilot.updated_time,
+        pilot.callsign,
+        pilot.online,
+        pilot.is_docked,
+        pilot.squad,
+        pilot.rank,
+        pilot.experience,
+        pilot.faction,
+        pilot.registration,
+        pilot.rating_solrain,
+        pilot.rating_quantar,
+        pilot.rating_octavius,
+        pilot.rating_amanath,
+        pilot.rating_hyperial,
+        pilot.solrain_kills,
+        pilot.octavian_kills,
+        pilot.quantar_kills,
+        pilot.credits,
+        pilot.shots_hit,
+        pilot.shots_fired,
+        pilot.missiles_hit,
+        pilot.missiles_fired,
+        pilot.missions_completed,
+        pilot.missions_flown,
+        pilot.conflux_kills,
+        pilot.deaths,
+        pilot.pure_mined,
+        pilot.artyfacts_found,
+        pilot.beacon_captured,
+        pilot.bounty_collected,
+        pilot.number_launches,
+        pilot.number_landing,
+        pilot.disconnects,
+        pilot.time_ingame,
+      ];
       await connection.query(
         "insert into pilots (" +
           "generation, " +
@@ -231,82 +268,8 @@ class DatabaseHandler {
           "landings, " +
           "disconnects, " +
           "played" +
-          ") values (0," +
-          "'" +
-          pilot.updated_time +
-          "'," +
-          "'" +
-          pilot.callsign +
-          "'," +
-          pilot.online +
-          "," +
-          pilot.is_docked +
-          "," +
-          "'" +
-          pilot.squad +
-          "'," +
-          pilot.rank +
-          "," +
-          pilot.experience +
-          "," +
-          "'" +
-          pilot.faction +
-          "'," +
-          "'" +
-          pilot.registration +
-          "'," +
-          pilot.rating_solrain +
-          "," +
-          pilot.rating_quantar +
-          "," +
-          pilot.rating_octavius +
-          "," +
-          pilot.rating_amanath +
-          "," +
-          pilot.rating_hyperial +
-          "," +
-          pilot.solrain_kills +
-          "," +
-          pilot.octavian_kills +
-          "," +
-          pilot.quantar_kills +
-          "," +
-          pilot.credits +
-          "," +
-          pilot.shots_hit +
-          "," +
-          pilot.shots_fired +
-          "," +
-          pilot.missiles_hit +
-          "," +
-          pilot.missiles_fired +
-          "," +
-          pilot.missions_completed +
-          "," +
-          pilot.missions_flown +
-          "," +
-          pilot.conflux_kills +
-          "," +
-          pilot.deaths +
-          "," +
-          pilot.pure_mined +
-          "," +
-          pilot.artyfacts_found +
-          "," +
-          pilot.beacon_captured +
-          "," +
-          pilot.bounty_collected +
-          "," +
-          pilot.number_launches +
-          "," +
-          pilot.number_landing +
-          "," +
-          pilot.disconnects +
-          "," +
-          "'" +
-          pilot.time_ingame +
-          "'" +
-          `)`
+          ") values (0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        values
       );
       await connection.query("COMMIT");
     } catch (err) {
@@ -321,10 +284,8 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `select * from pilots a where a.callsign = "` +
-          callsign +
-          `"` +
-          ` and (a.generation = (select min(generation) from pilots b where a.callsign = b.callsign and b.generation >= 1) or a.generation = 0) order by a.generation asc`
+        `select * from pilots a where a.callsign = ? and (a.generation = (select min(generation) from pilots b where a.callsign = b.callsign and b.generation >= 1) or a.generation = 0) order by a.generation asc`,
+        callsign
       );
       await connection.query("COMMIT");
       if (rows.length == 2) return rows;
@@ -340,16 +301,10 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       for await (let change of changes) {
+        let values = [callsign, change[0], change[1], change[2]];
         await connection.query(
-          "insert into pilot_changes (generation, callsign, stat, oldValue, newValue) values (0, '" +
-            callsign +
-            "','" +
-            change[0] +
-            "','" +
-            change[1] +
-            "','" +
-            change[2] +
-            "')"
+          "insert into pilot_changes (generation, callsign, stat, oldValue, newValue) values (0,?,?,?,?)",
+          values
         );
       }
       await connection.query("COMMIT");
@@ -365,9 +320,8 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
-        "delete from pilots where callsign = '" +
-          callsign +
-          "' and generation <> (select min(b.generation) from pilots as b where b.callsign = callsign)"
+        "delete from pilots where callsign = ? and generation <> (select min(b.generation) from pilots as b where b.callsign = callsign)",
+        callsign
       );
       await connection.query("COMMIT");
     } catch (err) {
