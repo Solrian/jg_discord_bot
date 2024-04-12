@@ -3,6 +3,7 @@ import { DatabaseHandler } from "./src/database/database-handler.js";
 import { JosshApiHandler } from "./src/jossh-api/jossh-api-handler.js";
 import { PilotManager } from "./src/pilot-manager.js";
 import { MarketManager } from "./src/market-manager.js";
+import { PosManager } from "./src/pos-manager.js";
 import readline from "readline";
 
 const databaseHandler = new DatabaseHandler();
@@ -10,6 +11,7 @@ const discordHandler = new DiscordHandler(databaseHandler);
 const josshApiHandler = new JosshApiHandler();
 const pilotManger = new PilotManager(josshApiHandler, databaseHandler);
 const marketManger = new MarketManager(josshApiHandler, databaseHandler);
+const posManager = new PosManager(josshApiHandler, databaseHandler);
 
 const updateEvent = josshApiHandler.updateFoundEvent;
 
@@ -18,16 +20,19 @@ updateEvent.on("newtimestamp", async () => {
   let startTS = Date.now();
   let currentTS = await josshApiHandler.getCurrentTS();
   let lastTS = await databaseHandler.getCurrentTS();
-  if (lastTS == null) {
+  if (!lastTS) {
     await databaseHandler.addNewGeneration(currentTS);
     await pilotManger.initializePilots();
     await marketManger.InitializeMarket();
+    await posManager.InitializePos();
     console.log("time needed: " + (Date.now() - startTS) + "ms");
   } else if (currentTS != lastTS) {
     if (!pilotManger.isUpdating && !marketManger.isUpdating) {
       await databaseHandler.addNewGeneration(currentTS);
       await pilotManger.updatePilots(lastTS);
       await marketManger.UpdateMarket();
+      await posManager.UpdatePos();
+      await databaseHandler.clearChanges();
       console.log("time needed: " + (Date.now() - startTS) + "ms");
     } else console.log("Update Suspended - previous Update still running");
   }

@@ -14,7 +14,7 @@ class PilotManager {
       for await (const user of users) {
         let pilot = await this.josshApiHandler.getPilot(user.callsign);
         if (pilot) {
-          this.databaseHandler.insertPilotProfile(pilot);
+          await this.databaseHandler.insertPilotProfile(pilot);
           console.log(
             Math.round((count / users.length) * 100) +
               "% (" +

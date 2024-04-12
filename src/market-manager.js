@@ -7,13 +7,11 @@ class MarketManager {
   }
   async InitializeMarket() {
     this.isUpdating = true;
-    console.log("getting market data.");
     let items = await this.josshApiHandler.getInventory();
     if (items.length > 0) {
       await this.databaseHandler.insertInventory(items);
     }
     this.isUpdating = false;
-    1;
   }
   async UpdateMarket() {
     this.isUpdating = true;

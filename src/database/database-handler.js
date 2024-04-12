@@ -132,6 +132,60 @@ class DatabaseHandler {
           return console.log(result);
         }
       );
+      connection.query(
+        "create table pos (" +
+          "generation int(11), " +
+          "posid varchar(25), " +
+          "name varchar(25), " +
+          "permission varchar(25), " +
+          "size tinyint(1), " +
+          "rearm tinyint(1), " +
+          "refuel tinyint(1), " +
+          "repair tinyint(1), " +
+          "sector varchar(25), " +
+          "x decimal(10,2), " +
+          "y decimal(10,2), " +
+          "z decimal(10,2) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
+      connection.query(
+        "create table pos_inventory (" +
+          "generation int(11), " +
+          "posid varchar(25), " +
+          "itemgroup varchar(25), " +
+          "name varchar(25), " +
+          "price int(11), " +
+          "amount int(11) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
+      connection.query(
+        "create table pos_inventory_changes (" +
+          "generation int(11), " +
+          "posid varchar(25), " +
+          "name varchar(25), " +
+          "stat varchar(25), " +
+          "oldValue int(11), " +
+          "newValue int(11) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
     } catch (err) {
       await connection.query("ROLLBACK");
       if (err) console.error(err);
@@ -148,6 +202,9 @@ class DatabaseHandler {
       await connection.query("drop table pilot_changes");
       await connection.query("drop table inventory");
       await connection.query("drop table inventory_changes");
+      await connection.query("drop table pos");
+      await connection.query("drop table pos_inventory");
+      await connection.query("drop table pos_inventory_changes");
       await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");
@@ -166,6 +223,11 @@ class DatabaseHandler {
       connection.query(`update inventory set generation = generation + 1`);
       connection.query(
         `update inventory_changes set generation = generation + 1`
+      );
+      connection.query(`update pos set generation = generation + 1`);
+      connection.query(`update pos_inventory set generation = generation + 1`);
+      connection.query(
+        `update pos_inventory_changes set generation = generation + 1`
       );
       connection.query(
         `insert into timelog (generation, time) values (0,?)`,
@@ -418,6 +480,88 @@ class DatabaseHandler {
           values
         );
       }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertPos(pid, p, pos) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let values = [
+        pid,
+        p.name,
+        p.premission,
+        pos.size,
+        pos.rearm / 1000,
+        pos.refuel / 1000,
+        pos.repair,
+        pos.sector,
+        pos.x,
+        pos.y,
+        pos.z,
+      ];
+      await connection.query(
+        "insert into pos (generation, posid, name, permission, size, rearm, refuel, repair, sector, x, y, z) values (0,?,?,?,?,?,?,?,?,?,?,?)",
+        values
+      );
+      if (pos.market.length > 0) {
+        for await (const item of pos.market) {
+          let values = [pid, item.type, item.name, item.price, item.amount];
+          await connection.query(
+            "insert into pos_inventory (generation, posid, itemgroup, name, price, amount) values (0,?,?,?,?,?)",
+            values
+          );
+        }
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async deleteOldPosData(pid) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query(
+        "delete from pos where generation > 0 and posid = ?",
+        pid
+      );
+      await connection.query(
+        "delete from pos_inventory where generation > 0 and posid = ?",
+        pid
+      );
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async deleteChanges(gen) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query(
+        "delete from pilot_changes where generation > ?",
+        gen
+      );
+      await connection.query(
+        "delete from inventory_changes where generation > ?",
+        gen
+      );
+      await connection.query(
+        "delete from pos_inventory_changes where generation > ?",
+        gen
+      );
       await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");
