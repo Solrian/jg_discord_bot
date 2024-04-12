@@ -32,15 +32,13 @@ async function checkForUpdate() {
   let missionsTS = await getMissionsTS();
   if (missionsTS != null) currentMissionsTS = missionsTS;
   if (lastMissionsTS == null || lastMissionsTS != currentMissionsTS) {
-    if (lastMissionsTS != null) timeout = 359000;
+    if (lastMissionsTS != null) timeout = 360000;
     lastMissionsTS = currentMissionsTS;
-    eventEmitter.emit("newdata");
+    eventEmitter.emit("newtimestamp");
   }
-  let endTS = Date.now();
-  console.log("time needed: " + (endTS - startTS) + "ms");
-  timeout = timeout - (endTS - startTS);
+  timeout = timeout - (Date.now() - startTS);
   if (timeout < minTimeout) timeout = minTimeout;
-  console.log("next interval: " + timeout + "ms");
+  console.log("next check in: " + timeout + "ms");
   setTimeout(checkForUpdate, timeout);
 }
 

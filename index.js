@@ -13,20 +13,25 @@ const marketManger = new MarketManager(josshApiHandler, databaseHandler);
 
 const updateEvent = josshApiHandler.updateFoundEvent;
 
-updateEvent.on("newdata", async () => {
+updateEvent.on("newtimestamp", async () => {
+  console.log("newtimestamp detected.");
+  let startTS = Date.now();
   let currentTS = await josshApiHandler.getCurrentTS();
   let lastTS = await databaseHandler.getCurrentTS();
   if (lastTS == null) {
     await databaseHandler.addNewGeneration(currentTS);
     await pilotManger.initializePilots();
     await marketManger.InitializeMarket();
+    console.log("time needed: " + (Date.now() - startTS) + "ms");
   } else if (currentTS != lastTS) {
     if (!pilotManger.isUpdating && !marketManger.isUpdating) {
       await databaseHandler.addNewGeneration(currentTS);
       await pilotManger.updatePilots(lastTS);
       await marketManger.UpdateMarket();
+      console.log("time needed: " + (Date.now() - startTS) + "ms");
     } else console.log("Update Suspended - previous Update still running");
   }
+  console.log("waiting for next server update");
 });
 
 var rl = readline.createInterface({

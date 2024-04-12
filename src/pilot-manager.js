@@ -218,7 +218,7 @@ class PilotManager {
               changes.push(["played", cur.played, old.played]);
             }
 
-            console.log(changes);
+            if (changes.length > 0) console.log(changes);
             await this.databaseHandler.insertPilotChanges(callsign, changes);
             await this.databaseHandler.deleteOldPilotProfile(pilot.callsign);
           }
