@@ -7,7 +7,7 @@ class PilotManager {
   }
   async initializePilots() {
     this.isUpdating = true;
-    console.log("Starting Initial Run");
+    console.log("updating initial pilots.");
     let users = await this.josshApiHandler.getUsers();
     let count = 1;
     if (users.length > 0) {
@@ -25,16 +25,16 @@ class PilotManager {
               pilot.callsign
           );
         }
+        if (count > 20) break;
         count++;
       }
     }
+    console.log("updating initial pilots. - done");
     this.isUpdating = false;
-    console.log("Initial Run Done! Waiting for next update interval");
   }
   async updatePilots(lastTS) {
     this.isUpdating = true;
     console.log("updating pilots.");
-
     let lastDate = new Date(lastTS.replace(" ", "T"));
     let lastTime = lastDate.getTime();
     let users = await this.josshApiHandler.getUsers();
@@ -59,7 +59,15 @@ class PilotManager {
       for await (const callsign of usersToCheck) {
         let pilot = await this.josshApiHandler.getPilot(callsign);
         if (pilot) {
-          console.log("(" + count + ") " + callsign);
+          console.log(
+            Math.round((count / usersToCheck.length) * 100) +
+              "% (" +
+              count +
+              "/" +
+              usersToCheck.length +
+              ") " +
+              pilot.callsign
+          );
           await this.databaseHandler.insertPilotProfile(pilot);
           let changes = [];
           let profiles = await this.databaseHandler.getProfilesToCompare(

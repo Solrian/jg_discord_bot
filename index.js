@@ -21,18 +21,24 @@ updateEvent.on("newtimestamp", async () => {
   let currentTS = await josshApiHandler.getCurrentTS();
   let lastTS = await databaseHandler.getCurrentTS();
   if (!lastTS) {
+    console.log("Starting Initial Run");
     await databaseHandler.addNewGeneration(currentTS);
     await pilotManger.initializePilots();
     await marketManger.InitializeMarket();
     await posManager.InitializePos();
+    console.log("Initial Run Done! Waiting for next update interval");
     console.log("time needed: " + (Date.now() - startTS) + "ms");
   } else if (currentTS != lastTS) {
-    if (!pilotManger.isUpdating && !marketManger.isUpdating) {
+    if (
+      !pilotManger.isUpdating &&
+      !marketManger.isUpdating &&
+      !posManager.isUpdating
+    ) {
       await databaseHandler.addNewGeneration(currentTS);
       await pilotManger.updatePilots(lastTS);
       await marketManger.UpdateMarket();
       await posManager.UpdatePos();
-      await databaseHandler.clearChanges();
+      await databaseHandler.deleteChanges(10);
       console.log("time needed: " + (Date.now() - startTS) + "ms");
     } else console.log("Update Suspended - previous Update still running");
   }

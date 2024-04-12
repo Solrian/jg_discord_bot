@@ -385,7 +385,7 @@ class DatabaseHandler {
       for await (let change of changes) {
         let values = [callsign, change[0], change[1], change[2]];
         await connection.query(
-          "insert into pilot_changes (generation, callsign, stat, oldValue, newValue) values (0,?,?,?,?)",
+          "insert into pilot_changes (generation, callsign, stat, newValue, oldValue) values (0,?,?,?,?)",
           values
         );
       }
@@ -476,7 +476,7 @@ class DatabaseHandler {
       for await (let change of changes) {
         let values = [change[0], change[1], change[2], change[3], change[4]];
         await connection.query(
-          "insert into inventory_changes (generation, station, name, stat, oldValue, newValue) values (0,?,?,?,?,?)",
+          "insert into inventory_changes (generation, station, name, stat, newValue, oldValue) values (0,?,?,?,?,?)",
           values
         );
       }
@@ -526,18 +526,47 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async deleteOldPosData(pid) {
+  async getPosInventoryToCompare() {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-      await connection.query(
-        "delete from pos where generation > 0 and posid = ?",
-        pid
+      let rows = await connection.query(
+        `SELECT * from pos_inventory order by posid, name, generation asc`
       );
-      await connection.query(
-        "delete from pos_inventory where generation > 0 and posid = ?",
-        pid
-      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async deleteOldPosData() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query("delete from pos where generation > 0");
+      await connection.query("delete from pos_inventory where generation > 0");
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertPosInventoryChanges(changes) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (let change of changes) {
+        let values = [change[0], change[1], change[2], change[3], change[4]];
+        await connection.query(
+          "insert into pos_inventory_changes (generation, posid, name, stat, newValue, oldValue) values (0,?,?,?,?,?)",
+          values
+        );
+      }
       await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");
@@ -559,7 +588,7 @@ class DatabaseHandler {
         gen
       );
       await connection.query(
-        "delete from pos_inventory_changes where generation > ?",
+        "delete from pilot_changes where generation > ?",
         gen
       );
       await connection.query("COMMIT");

@@ -7,10 +7,12 @@ class MarketManager {
   }
   async InitializeMarket() {
     this.isUpdating = true;
+    console.log("updating initial market.");
     let items = await this.josshApiHandler.getInventory();
     if (items.length > 0) {
       await this.databaseHandler.insertInventory(items);
     }
+    console.log("updating initial market. - done");
     this.isUpdating = false;
   }
   async UpdateMarket() {
@@ -24,7 +26,7 @@ class MarketManager {
       while (inventory.length > 1) {
         let cur = inventory.shift();
         let old = inventory.shift();
-        if (cur.id != old.id && cur.station != old.station)
+        if (cur.id != old.id || cur.station != old.station)
           inventory.unshift(old);
         else {
           if (cur.price != old.price) {
