@@ -5,18 +5,14 @@ class PosManager {
     this.josshApiHandler = josshApiHandler;
     this.databaseHandler = databaseHandler;
   }
-  async InitializePos() {
+  async initializePos() {
     this.isUpdating = true;
     console.log("updating initial pos.");
-    let posList = await this.josshApiHandler.getListOfPos();
-    let posListValues = Object.values(posList);
+    let posList = await this.josshApiHandler.getPosList();
     let count = 1;
-    for (const p of posListValues) {
-      let pos = await this.josshApiHandler.getPosDetails(p.url);
+    for (const [pid, p] of Object.entries(posList)) {
+      let pos = await this.josshApiHandler.getPos(p.url);
       if (pos) {
-        let regex = /[A-Za-z0-9]+\.json/;
-        let tmp = regex.exec(p.url);
-        let pid = tmp[0].substring(0, tmp[0].length - 5);
         await this.databaseHandler.insertPos(pid, p, pos);
         console.log(
           Math.round((count / posListValues.length) * 100) +
@@ -27,44 +23,39 @@ class PosManager {
             ") " +
             pos.name
         );
-        await this.databaseHandler.deleteOldPosData(pid);
         count++;
       }
     }
     console.log("updating initial pos. - done");
     this.isUpdating = false;
   }
-  async UpdatePos() {
+  async updatePos() {
     this.isUpdating = true;
     console.log("updating pos.");
-    let posList = await this.josshApiHandler.getListOfPos();
-    let posListValues = Object.values(posList);
+    let posList = await this.josshApiHandler.getPosList();
     let count = 1;
-    for (const p of posListValues) {
-      let pos = await this.josshApiHandler.getPosDetails(p.url);
+    for (const [pid, p] of Object.entries(posList)) {
+      let pos = await this.josshApiHandler.getPos(p.url);
       if (pos) {
-        let regex = /[A-Za-z0-9]+\.json/;
-        let tmp = regex.exec(p.url);
-        let pid = tmp[0].substring(0, tmp[0].length - 5);
         await this.databaseHandler.insertPos(pid, p, pos);
         console.log(
-          Math.round((count / posListValues.length) * 100) +
+          Math.round((count / Object.entries(posList).length) * 100) +
             "% (" +
             count +
             "/" +
-            posListValues.length +
+            Object.entries(posList).length +
             ") " +
             pos.name
         );
         count++;
       }
     }
-    await this.LogPosInventoryChanges();
+    await this.logPosInventoryChanges();
     await this.databaseHandler.deleteOldPosData();
     console.log("updating pos. - done");
     this.isUpdating = false;
   }
-  async LogPosInventoryChanges() {
+  async logPosInventoryChanges() {
     let items = await this.databaseHandler.getPosInventoryToCompare();
     let changes = [];
     let cur;

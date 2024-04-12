@@ -186,6 +186,89 @@ class DatabaseHandler {
           return console.log(result);
         }
       );
+      connection.query(
+        "create table sector_links (" +
+          "generation int(11), " +
+          "sector1 varchar(25), " +
+          "sector2 varchar(25) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
+      connection.query(
+        "create table sector_link_changes (" +
+          "generation int(11), " +
+          "sector1 varchar(25), " +
+          "sector2 varchar(25), " +
+          "isActive tinyint(1) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
+      connection.query(
+        "create table beacons (" +
+          "generation int(11), " +
+          "sector varchar(25), " +
+          "status tinyint(1) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
+      connection.query(
+        "create table beacon_changes (" +
+          "generation int(11), " +
+          "sector varchar(25), " +
+          "oldStatus tinyint(1), " +
+          "newStatus tinyint(1) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
+      connection.query(
+        "create table missions (" +
+          "generation int(11), " +
+          "faction varchar(25), " +
+          "text text, " +
+          "complete  decimal(10,2)" +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
+      connection.query(
+        "create table mission_changes (" +
+          "generation int(11), " +
+          "faction varchar(25), " +
+          "stat varchar(25), " +
+          "oldValue text, " +
+          "newValue text " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
     } catch (err) {
       await connection.query("ROLLBACK");
       if (err) console.error(err);
@@ -205,6 +288,12 @@ class DatabaseHandler {
       await connection.query("drop table pos");
       await connection.query("drop table pos_inventory");
       await connection.query("drop table pos_inventory_changes");
+      await connection.query("drop table sector_links");
+      await connection.query("drop table sector_link_changes");
+      await connection.query("drop table beacons");
+      await connection.query("drop table beacon_changes");
+      await connection.query("drop table missions");
+      await connection.query("drop table mission_changes");
       await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");
@@ -228,6 +317,16 @@ class DatabaseHandler {
       connection.query(`update pos_inventory set generation = generation + 1`);
       connection.query(
         `update pos_inventory_changes set generation = generation + 1`
+      );
+      connection.query(`update sector_links set generation = generation + 1`);
+      connection.query(
+        `update sector_link_changes set generation = generation + 1`
+      );
+      connection.query(`update beacons set generation = generation + 1`);
+      connection.query(`update beacon_changes set generation = generation + 1`);
+      connection.query(`update missions set generation = generation + 1`);
+      connection.query(
+        `update mission_changes set generation = generation + 1`
       );
       connection.query(
         `insert into timelog (generation, time) values (0,?)`,
@@ -591,6 +690,205 @@ class DatabaseHandler {
         "delete from pilot_changes where generation > ?",
         gen
       );
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertSectorLinks(links) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (const link of links) {
+        let values = [link[0], link[1]];
+        await connection.query(
+          "insert into sector_links (generation, sector1, sector2) values (0,?,?)",
+          values
+        );
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async getSectorLinks() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `SELECT * from sector_links order by sector1, generation asc`
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertSectorLinksChanges(changes) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (let change of changes) {
+        let values = [change[0], change[1], change[2]];
+        await connection.query(
+          "insert into sector_links_changes (generation, sector1, sector2, isActive) values (0,?,?,?)",
+          values
+        );
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async deleteOldSectorLinks() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query("delete from sector_links where generation > 0");
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertBeacons(sectors) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (const sector of sectors) {
+        let values = [sector.name, sector.beacon];
+        await connection.query(
+          "insert into beacons (generation, sector, status) values (0,?,?)",
+          values
+        );
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async getBeacons() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `SELECT * from beacons order by sector, generation asc`
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertBeaconChanges(changes) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (let change of changes) {
+        let values = [change[0], change[1], change[2]];
+        await connection.query(
+          "insert into beacon_changes (generation, sector, newStatus, oldStatus) values (0,?,?,?)",
+          values
+        );
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async deleteOldBeacons() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query("delete from beacons where generation > 0");
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertMissions(missions) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (const [faction, values] of Object.entries(missions)) {
+        await connection.query(
+          "insert into missions (generation, faction, text, complete) values (0,?,?,?)",
+          [faction, values.text, values.complete]
+        );
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async getMissions() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `SELECT * from missions order by faction, generation asc`
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertMissionChanges(changes) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (let change of changes) {
+        await connection.query(
+          "insert into mission_changes (generation, faction, stat, newValue, oldValue) values (0,?,?,?,?)",
+          [change[0], change[1], change[2], change[3]]
+        );
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async deleteMissions() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query("delete from missions where generation > 0");
       await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");

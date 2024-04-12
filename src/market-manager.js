@@ -5,20 +5,20 @@ class MarketManager {
     this.josshApiHandler = josshApiHandler;
     this.databaseHandler = databaseHandler;
   }
-  async InitializeMarket() {
+  async initializeMarket() {
     this.isUpdating = true;
     console.log("updating initial market.");
-    let items = await this.josshApiHandler.getInventory();
+    let items = await this.josshApiHandler.getStationsInventory();
     if (items.length > 0) {
       await this.databaseHandler.insertInventory(items);
     }
     console.log("updating initial market. - done");
     this.isUpdating = false;
   }
-  async UpdateMarket() {
+  async updateMarket() {
     this.isUpdating = true;
     console.log("updating market.");
-    let items = await this.josshApiHandler.getInventory();
+    let items = await this.josshApiHandler.getStationsInventory();
     let changes = [];
     if (items.length > 0) {
       await this.databaseHandler.insertInventory(items);

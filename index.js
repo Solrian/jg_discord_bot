@@ -4,6 +4,8 @@ import { JosshApiHandler } from "./src/jossh-api/jossh-api-handler.js";
 import { PilotManager } from "./src/pilot-manager.js";
 import { MarketManager } from "./src/market-manager.js";
 import { PosManager } from "./src/pos-manager.js";
+import { MapManager } from "./src/map-manager.js";
+import { MissionManager } from "./src/mission-manager.js";
 import readline from "readline";
 
 const databaseHandler = new DatabaseHandler();
@@ -12,6 +14,8 @@ const josshApiHandler = new JosshApiHandler();
 const pilotManger = new PilotManager(josshApiHandler, databaseHandler);
 const marketManger = new MarketManager(josshApiHandler, databaseHandler);
 const posManager = new PosManager(josshApiHandler, databaseHandler);
+const mapManager = new MapManager(josshApiHandler, databaseHandler);
+const missionManager = new MissionManager(josshApiHandler, databaseHandler);
 
 const updateEvent = josshApiHandler.updateFoundEvent;
 
@@ -24,20 +28,26 @@ updateEvent.on("newtimestamp", async () => {
     console.log("Starting Initial Run");
     await databaseHandler.addNewGeneration(currentTS);
     await pilotManger.initializePilots();
-    await marketManger.InitializeMarket();
-    await posManager.InitializePos();
+    await marketManger.initializeMarket();
+    await posManager.initializePos();
+    await mapManager.initializeMap();
+    await missionManager.initializeMissions();
     console.log("Initial Run Done! Waiting for next update interval");
     console.log("time needed: " + (Date.now() - startTS) + "ms");
-  } else if (currentTS != lastTS) {
+  } else if (currentTS || lastTS) {
     if (
       !pilotManger.isUpdating &&
       !marketManger.isUpdating &&
-      !posManager.isUpdating
+      !posManager.isUpdating &&
+      !mapManager.isUpdating &&
+      !missionManager.isUpdating
     ) {
       await databaseHandler.addNewGeneration(currentTS);
       await pilotManger.updatePilots(lastTS);
-      await marketManger.UpdateMarket();
-      await posManager.UpdatePos();
+      await marketManger.updateMarket();
+      await posManager.updatePos();
+      await mapManager.updateMap();
+      await missionManager.updateMissions();
       await databaseHandler.deleteChanges(10);
       console.log("time needed: " + (Date.now() - startTS) + "ms");
     } else console.log("Update Suspended - previous Update still running");

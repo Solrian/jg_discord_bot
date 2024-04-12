@@ -15,20 +15,72 @@ class JosshApiHandler {
   async getCurrentTS() {
     return await getMissionsTS();
   }
-  async getPilot(callsign) {
-    return await getPilotProfile(callsign);
+  async getUserProfile(callsign) {
+    try {
+      let url =
+        "http://jumpgate-tri.org/jossh-api/user-profile/" + callsign + ".json";
+      const { data } = await axios.get(url);
+      return data;
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.status + " " + callsign);
+        return await getPilotProfile(callsign);
+      }
+    }
   }
-  async getUsers() {
-    return await getAllUsers();
+  async getAllUsers() {
+    try {
+      let url = "http://jumpgate-tri.org/jossh-api/all-users.json";
+      const { data } = await axios.get(url);
+      return data;
+    } catch (error) {
+      return console.error(error);
+    }
   }
-  async getInventory() {
-    return await getStationsInventory();
+  async getStationsInventory() {
+    try {
+      let url = "http://jumpgate-tri.org/jossh-api/stations-inventory.json";
+      const { data } = await axios.get(url);
+      return data;
+    } catch (error) {
+      return console.error(error);
+    }
   }
-  async getListOfPos() {
-    return await getPosList();
+  async getPosList() {
+    try {
+      let url = "http://jumpgate-tri.org/jossh-api/pos-list.json";
+      const { data } = await axios.get(url);
+      return data;
+    } catch (error) {
+      return console.error(error);
+    }
   }
-  async getPosDetails(posUrl) {
-    return await getPos(posUrl);
+  async getPos(posUrl) {
+    try {
+      let url = "http://jumpgate-tri.org" + posUrl;
+      const { data } = await axios.get(url);
+      return data;
+    } catch (error) {
+      return console.error(error);
+    }
+  }
+  async getMap() {
+    try {
+      let url = "http://jumpgate-tri.org/jossh-api/map.json";
+      const { data } = await axios.get(url);
+      return data;
+    } catch (error) {
+      return console.error(error);
+    }
+  }
+  async getMissions() {
+    try {
+      let url = "http://jumpgate-tri.org/jossh-api/missions.json";
+      const { data } = await axios.get(url);
+      return data.missions;
+    } catch (error) {
+      return console.error(error);
+    }
   }
 }
 
@@ -47,66 +99,11 @@ async function checkForUpdate() {
   console.log("next check in: " + timeout + "ms");
   setTimeout(checkForUpdate, timeout);
 }
-
 async function getMissionsTS() {
   try {
     let url = "http://jumpgate-tri.org/jossh-api/missions.json";
     const { data } = await axios.get(url);
     return data.last_update;
-  } catch (error) {
-    return console.error(error);
-  }
-}
-
-async function getPilotProfile(callsign) {
-  try {
-    let url =
-      "http://jumpgate-tri.org/jossh-api/user-profile/" + callsign + ".json";
-    const { data } = await axios.get(url);
-    return data;
-  } catch (error) {
-    if (error.response) {
-      console.log(error.response.status + " " + callsign);
-      return await getPilotProfile(callsign);
-    }
-  }
-}
-
-async function getAllUsers() {
-  try {
-    let url = "http://jumpgate-tri.org/jossh-api/all-users.json";
-    const { data } = await axios.get(url);
-    return data;
-  } catch (error) {
-    return console.error(error);
-  }
-}
-
-async function getStationsInventory() {
-  try {
-    let url = "http://jumpgate-tri.org/jossh-api/stations-inventory.json";
-    const { data } = await axios.get(url);
-    return data;
-  } catch (error) {
-    return console.error(error);
-  }
-}
-
-async function getPosList() {
-  try {
-    let url = "http://jumpgate-tri.org/jossh-api/pos-list.json";
-    const { data } = await axios.get(url);
-    return data;
-  } catch (error) {
-    return console.error(error);
-  }
-}
-
-async function getPos(posUrl) {
-  try {
-    let url = "http://jumpgate-tri.org" + posUrl;
-    const { data } = await axios.get(url);
-    return data;
   } catch (error) {
     return console.error(error);
   }
