@@ -163,6 +163,10 @@ class DatabaseHandler {
       connection.query(`update timelog set generation = generation + 1`);
       connection.query(`update pilots set generation = generation + 1`);
       connection.query(`update pilot_changes set generation = generation + 1`);
+      connection.query(`update inventory set generation = generation + 1`);
+      connection.query(
+        `update inventory_changes set generation = generation + 1`
+      );
       connection.query(
         `insert into timelog (generation, time) values (0,?)`,
         timestamp
@@ -196,7 +200,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT distinct callsign from pilot_changes where generation <= 26 and stat='isOnline'`
+        `SELECT distinct callsign from pilot_changes where generation <= 25`
       );
       await connection.query("COMMIT");
       return rows;
@@ -339,6 +343,81 @@ class DatabaseHandler {
         "delete from pilots where callsign = ? and generation <> (select min(b.generation) from pilots as b where b.callsign = callsign)",
         callsign
       );
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertInventory(items) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (let item of items) {
+        let values = [
+          item.item_id,
+          item.station_name,
+          item.group_name,
+          item.name,
+          item.price,
+          item.amount,
+          item.produce,
+        ];
+        await connection.query(
+          "insert into inventory (generation, id, station, itemgroup, name, price, amount, produce) values (0,?,?,?,?,?,?,?)",
+          values
+        );
+      }
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async getInventory() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `SELECT * from inventory order by id, station, generation asc`
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async deleteOldInventory() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query("delete from inventory where generation > 0");
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertInventoryChanges(changes) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      for await (let change of changes) {
+        let values = [change[0], change[1], change[2], change[3], change[4]];
+        await connection.query(
+          "insert into inventory_changes (generation, station, name, stat, oldValue, newValue) values (0,?,?,?,?,?)",
+          values
+        );
+      }
       await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");

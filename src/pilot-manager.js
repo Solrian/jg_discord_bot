@@ -1,6 +1,3 @@
-import axios from "axios";
-import EventEmitter from "events";
-
 class PilotManager {
   isUpdating = false;
   constructor(josshApiHandler, databaseHandler) {
@@ -8,7 +5,6 @@ class PilotManager {
     this.josshApiHandler = josshApiHandler;
     this.databaseHandler = databaseHandler;
   }
-
   async initializePilots() {
     this.isUpdating = true;
     console.log("Starting Initial Run");
@@ -35,7 +31,6 @@ class PilotManager {
     this.isUpdating = false;
     console.log("Initial Run Done! Waiting for next update interval");
   }
-
   async updatePilots(lastTS) {
     this.isUpdating = true;
     console.log("updating pilots.");
@@ -56,7 +51,6 @@ class PilotManager {
       }
       //get callsigns to check for beacons
       let pilots = await this.databaseHandler.getBeaconPilots();
-      console.log(pilots);
       for await (const pilot of pilots) {
         if (!usersToCheck.includes(pilot.callsign))
           usersToCheck.push(pilot.callsign);
@@ -233,7 +227,7 @@ class PilotManager {
       }
     }
 
-    console.log("Pilot Update Done");
+    console.log("updating pilots. - done");
     this.isUpdating = false;
   }
 }

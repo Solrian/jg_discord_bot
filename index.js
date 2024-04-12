@@ -2,12 +2,14 @@ import { DiscordHandler } from "./src/discord/discord-handler.js";
 import { DatabaseHandler } from "./src/database/database-handler.js";
 import { JosshApiHandler } from "./src/jossh-api/jossh-api-handler.js";
 import { PilotManager } from "./src/pilot-manager.js";
+import { MarketManager } from "./src/market-manager.js";
 import readline from "readline";
 
 const databaseHandler = new DatabaseHandler();
 const discordHandler = new DiscordHandler(databaseHandler);
 const josshApiHandler = new JosshApiHandler();
 const pilotManger = new PilotManager(josshApiHandler, databaseHandler);
+const marketManger = new MarketManager(josshApiHandler, databaseHandler);
 
 const updateEvent = josshApiHandler.updateFoundEvent;
 
@@ -17,10 +19,12 @@ updateEvent.on("newdata", async () => {
   if (lastTS == null) {
     await databaseHandler.addNewGeneration(currentTS);
     await pilotManger.initializePilots();
+    await marketManger.InitializeMarket();
   } else if (currentTS != lastTS) {
-    if (!pilotManger.isUpdating) {
+    if (!pilotManger.isUpdating && !marketManger.isUpdating) {
       await databaseHandler.addNewGeneration(currentTS);
       await pilotManger.updatePilots(lastTS);
+      await marketManger.UpdateMarket();
     } else console.log("Update Suspended - previous Update still running");
   }
 });

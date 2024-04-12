@@ -21,6 +21,9 @@ class JosshApiHandler {
   async getUsers() {
     return await getAllUsers();
   }
+  async getInventory() {
+    return await getStationsInventory();
+  }
 }
 
 async function checkForUpdate() {
@@ -68,6 +71,16 @@ async function getPilotProfile(callsign) {
 async function getAllUsers() {
   try {
     let url = "http://jumpgate-tri.org/jossh-api/all-users.json";
+    const { data } = await axios.get(url);
+    return data;
+  } catch (error) {
+    return console.error(error);
+  }
+}
+
+async function getStationsInventory() {
+  try {
+    let url = "http://jumpgate-tri.org/jossh-api/stations-inventory.json";
     const { data } = await axios.get(url);
     return data;
   } catch (error) {
