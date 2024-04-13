@@ -13,8 +13,8 @@ class DatabaseHandler {
       let rows = await connection.query(
         `SELECT table_name FROM information_schema.tables WHERE table_schema = '${process.env.SQL_DB}'`
       );
-      console.log(rows);
       await connection.query("COMMIT");
+      return rows;
     } catch (err) {
       await connection.query("ROLLBACK");
       if (err) console.error(err);
@@ -340,6 +340,24 @@ class DatabaseHandler {
       await connection.release();
     }
   }
+  async clearGeneration() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      connection.query(`delete from inventory where generation > 0`);
+      connection.query(`delete from missions where generation > 0`);
+      connection.query(`delete from sector_links where generation > 0`);
+      connection.query(`delete from beacons where generation > 0`);
+      connection.query(`delete from pos where generation > 0`);
+      connection.query(`delete from pos_inventory where generation > 0`);
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
   async getCurrentTS() {
     const connection = await mysql.connection();
     try {
@@ -356,7 +374,7 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async getBeaconPilots() {
+  async getBeaconUsers() {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
@@ -372,7 +390,7 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async insertPilotProfile(pilot) {
+  async insertPilot(pilot) {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
@@ -460,16 +478,15 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async getProfilesToCompare(callsign) {
+  async getPilotsToCompare() {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `select * from pilots a where a.callsign = ? and (a.generation = (select min(generation) from pilots b where a.callsign = b.callsign and b.generation >= 1) or a.generation = 0) order by a.generation asc`,
-        callsign
+        `SELECT * from pilots order by callsign, generation asc`
       );
       await connection.query("COMMIT");
-      if (rows.length == 2) return rows;
+      return rows;
     } catch (err) {
       await connection.query("ROLLBACK");
       if (err) console.error(err);
@@ -477,12 +494,12 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async insertPilotChanges(callsign, changes) {
+  async insertPilotChanges(changes) {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
       for await (let change of changes) {
-        let values = [callsign, change[0], change[1], change[2]];
+        let values = [change[0], change[1], change[2], change[3]];
         await connection.query(
           "insert into pilot_changes (generation, callsign, stat, newValue, oldValue) values (0,?,?,?,?)",
           values
@@ -539,7 +556,7 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async getInventory() {
+  async getInventoryToCompare() {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
@@ -687,7 +704,19 @@ class DatabaseHandler {
         gen
       );
       await connection.query(
-        "delete from pilot_changes where generation > ?",
+        "delete from beacon_changes where generation > ?",
+        gen
+      );
+      await connection.query(
+        "delete from mission_changes where generation > ?",
+        gen
+      );
+      await connection.query(
+        "delete from pos_inventory_changes where generation > ?",
+        gen
+      );
+      await connection.query(
+        "delete from sector_link_changes where generation > ?",
         gen
       );
       await connection.query("COMMIT");
@@ -740,7 +769,7 @@ class DatabaseHandler {
       for await (let change of changes) {
         let values = [change[0], change[1], change[2]];
         await connection.query(
-          "insert into sector_links_changes (generation, sector1, sector2, isActive) values (0,?,?,?)",
+          "insert into sector_link_changes (generation, sector1, sector2, isActive) values (0,?,?,?)",
           values
         );
       }
@@ -850,7 +879,7 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async getMissions() {
+  async getMissionsToCompare() {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
