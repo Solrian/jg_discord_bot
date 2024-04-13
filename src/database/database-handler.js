@@ -733,7 +733,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from sector_links order by sector1, sector2 generation asc`
+        `SELECT * from sector_links order by sector1, sector2, generation asc`
       );
       await connection.query("COMMIT");
       return rows;
