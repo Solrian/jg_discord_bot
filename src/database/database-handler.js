@@ -340,24 +340,6 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async clearGeneration() {
-    const connection = await mysql.connection();
-    try {
-      await connection.query("START TRANSACTION");
-      connection.query(`delete from inventory where generation > 0`);
-      connection.query(`delete from missions where generation > 0`);
-      connection.query(`delete from sector_links where generation > 0`);
-      connection.query(`delete from beacons where generation > 0`);
-      connection.query(`delete from pos where generation > 0`);
-      connection.query(`delete from pos_inventory where generation > 0`);
-      await connection.query("COMMIT");
-    } catch (err) {
-      await connection.query("ROLLBACK");
-      if (err) console.error(err);
-    } finally {
-      await connection.release();
-    }
-  }
   async getCurrentTS() {
     const connection = await mysql.connection();
     try {
@@ -518,7 +500,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
-        "delete from pilots where callsign = ? and generation <> (select min(b.generation) from pilots as b where b.callsign = callsign)",
+        "delete from pilots where callsign = ? and generation > 0",
         callsign
       );
       await connection.query("COMMIT");
@@ -751,7 +733,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from sector_links order by sector1, generation asc`
+        `SELECT * from sector_links order by sector1, sector2 generation asc`
       );
       await connection.query("COMMIT");
       return rows;
@@ -913,7 +895,7 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-  async deleteMissions() {
+  async deleteOldMissions() {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");

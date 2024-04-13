@@ -17,7 +17,6 @@ class DataManager {
     } else if (currentTS != lastTS) {
       await this.databaseHandler.addNewGeneration(currentTS);
       await this.#update(lastTS);
-      await this.databaseHandler.clearGeneration();
       await this.databaseHandler.deleteChanges(1000);
     }
     this.isUpdating = false;
@@ -70,7 +69,7 @@ class DataManager {
       }
     }
     await this.#savePilots(pilotsToCheck);
-    await this.#compareUsers();
+    await this.#comparePilots();
   }
   async #savePilots(callsigns) {
     let count = 1;
@@ -91,7 +90,7 @@ class DataManager {
       count++;
     }
   }
-  async #compareUsers() {
+  async #comparePilots() {
     let pilots = await this.databaseHandler.getPilotsToCompare();
     let changes = [];
     let cur;
@@ -287,8 +286,8 @@ class DataManager {
         if (cur.played != old.played) {
           changes.push([cur.callsign, "played", cur.played, old.played]);
         }
+        await this.databaseHandler.deleteOldPilotProfile(cur.callsign);
       }
-      await this.databaseHandler.deleteOldPilotProfile(cur.callsign);
     }
     if (changes.length > 0) console.log(changes);
     await this.databaseHandler.insertPilotChanges(changes);
@@ -328,6 +327,7 @@ class DataManager {
         }
       }
     }
+    await this.databaseHandler.deleteOldInventory();
     await this.databaseHandler.insertInventoryChanges(changes);
   }
   async #initMissions() {
@@ -358,6 +358,7 @@ class DataManager {
         }
       }
     }
+    await this.databaseHandler.deleteOldMissions();
     await this.databaseHandler.insertMissionChanges(changes);
   }
   async #initMap() {
@@ -389,6 +390,7 @@ class DataManager {
           changes.push([cur.sector, cur.status, old.status]);
       }
     }
+    await this.databaseHandler.deleteOldBeacons();
     await this.databaseHandler.insertBeaconChanges(changes);
     let links = await this.databaseHandler.getSectorLinks();
     changes = [];
@@ -396,16 +398,11 @@ class DataManager {
       cur = links.shift();
       if (links.length > 0) {
         old = links.shift();
-        if (cur.posid != old.posid || cur.name != old.name) {
+        if (cur.sector1 != old.sector1 || cur.sector2 != old.sector2) {
           if (cur.generation == 0) changes.push([cur.sector1, cur.sector2, 1]);
           else if (cur.generation == 1)
             changes.push([cur.sector1, cur.sector2, 0]);
           links.unshift(old);
-        } else {
-          if (cur.amount != old.amount)
-            changes.push([cur.sector1, cur.sector2, 1]);
-          if (cur.price != old.price)
-            changes.push([cur.sector1, cur.sector2, 0]);
         }
       } else {
         if (cur.generation == 0) changes.push([cur.sector1, cur.sector2, 1]);
@@ -413,6 +410,7 @@ class DataManager {
           changes.push([cur.sector1, cur.sector2, 0]);
       }
     }
+    await this.databaseHandler.deleteOldSectorLinks();
     await this.databaseHandler.insertSectorLinksChanges(changes);
   }
   async #initPos() {
@@ -477,6 +475,7 @@ class DataManager {
           changes.push([cur.posid, cur.name, "amount", 0, cur.amount]);
       }
     }
+    await this.databaseHandler.deleteOldPosData();
     await this.databaseHandler.insertPosInventoryChanges(changes);
   }
 }

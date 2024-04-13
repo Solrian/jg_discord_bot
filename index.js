@@ -7,8 +7,7 @@ import readline from "readline";
 const databaseHandler = new DatabaseHandler();
 let tables = await databaseHandler.listTables();
 if (tables.length < 14) {
-  await databaseHandler.dropTables();
-  databaseHandler.createTables();
+  await databaseHandler.createTables();
 }
 const discordHandler = new DiscordHandler(databaseHandler);
 const josshApiHandler = new JosshApiHandler();
