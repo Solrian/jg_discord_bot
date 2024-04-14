@@ -45,7 +45,7 @@ class DataManager {
     for await (const user of users) {
       pilotsToCheck.push(user.callsign);
     }
-    await this.#savePilots(pilotsToCheck);
+    await this.#savePilots(pilotsToCheck, true);
   }
   async #updatePilots(lastTS) {
     let lastDate = new Date(lastTS.replace(" ", "T"));
@@ -68,24 +68,25 @@ class DataManager {
           pilotsToCheck.push(pilot.callsign);
       }
     }
-    await this.#savePilots(pilotsToCheck);
+    await this.#savePilots(pilotsToCheck, false);
     await this.#comparePilots();
   }
-  async #savePilots(callsigns) {
+  async #savePilots(callsigns, withLog) {
     let count = 1;
     for await (const callsign of callsigns) {
       let pilot = await this.josshApiHandler.getUserProfile(callsign);
       if (pilot) {
         await this.databaseHandler.insertPilot(pilot);
-        console.log(
-          Math.round((count / callsigns.length) * 100) +
-            "% (" +
-            count +
-            "/" +
-            callsigns.length +
-            ") " +
-            pilot.callsign
-        );
+        if (withLog)
+          console.log(
+            Math.round((count / callsigns.length) * 100) +
+              "% (" +
+              count +
+              "/" +
+              callsigns.length +
+              ") " +
+              pilot.callsign
+          );
       }
       count++;
     }
@@ -289,8 +290,10 @@ class DataManager {
         await this.databaseHandler.deleteOldPilotProfile(cur.callsign);
       }
     }
-    if (changes.length > 0) console.log(changes);
-    await this.databaseHandler.insertPilotChanges(changes);
+    if (changes.length > 0) {
+      console.log(changes);
+      await this.databaseHandler.insertPilotChanges(changes);
+    }
   }
   async #initInventory() {
     let items = await this.josshApiHandler.getStationsInventory();
@@ -327,8 +330,11 @@ class DataManager {
         }
       }
     }
+    if (changes.length > 0) {
+      console.log("station-inventory logged.");
+      await this.databaseHandler.insertInventoryChanges(changes);
+    }
     await this.databaseHandler.deleteOldInventory();
-    await this.databaseHandler.insertInventoryChanges(changes);
   }
   async #initMissions() {
     let missions = await this.josshApiHandler.getMissions();
@@ -358,8 +364,11 @@ class DataManager {
         }
       }
     }
+    if (changes.length > 0) {
+      console.log(changes);
+      await this.databaseHandler.insertMissionChanges(changes);
+    }
     await this.databaseHandler.deleteOldMissions();
-    await this.databaseHandler.insertMissionChanges(changes);
   }
   async #initMap() {
     let map = await this.josshApiHandler.getMap();
@@ -390,8 +399,11 @@ class DataManager {
           changes.push([cur.sector, cur.status, old.status]);
       }
     }
+    if (changes.length > 0) {
+      console.log(changes);
+      await this.databaseHandler.insertBeaconChanges(changes);
+    }
     await this.databaseHandler.deleteOldBeacons();
-    await this.databaseHandler.insertBeaconChanges(changes);
     let links = await this.databaseHandler.getSectorLinks();
     changes = [];
     while (links.length > 0) {
@@ -410,8 +422,11 @@ class DataManager {
           changes.push([cur.sector1, cur.sector2, 0]);
       }
     }
+    if (changes.length > 0) {
+      console.log(changes);
+      await this.databaseHandler.insertSectorLinksChanges(changes);
+    }
     await this.databaseHandler.deleteOldSectorLinks();
-    await this.databaseHandler.insertSectorLinksChanges(changes);
   }
   async #initPos() {
     let posList = await this.josshApiHandler.getPosList();
@@ -475,8 +490,11 @@ class DataManager {
           changes.push([cur.posid, cur.name, "amount", 0, cur.amount]);
       }
     }
+    if (changes.length > 0) {
+      console.log(changes);
+      await this.databaseHandler.insertPosInventoryChanges(changes);
+    }
     await this.databaseHandler.deleteOldPosData();
-    await this.databaseHandler.insertPosInventoryChanges(changes);
   }
 }
 
