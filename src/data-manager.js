@@ -169,7 +169,6 @@ class DataManager {
     let posList = await this.josshApiHandler.getPosList();
     let allPos = [];
     let promises = [];
-    1;
     let count = 0;
     console.log(Object.entries(posList).length + " pos to load.");
     for (const [pid, p] of Object.entries(posList)) {
@@ -198,11 +197,9 @@ class DataManager {
     let tmp = Date.now();
     let pilots = await this.databaseHandler.getPilotsToCompare();
     let changes = [];
-    console.log(pilots.length / 2);
     while (pilots.length > 1) {
       let cur = pilots.shift();
       let old = pilots.shift();
-      console.log(cur.callsign + " " + old.callsign);
       if (cur.callsign != old.callsign) pilots.unshift(old);
       else {
         if (cur.isOnline != old.isOnline) {
