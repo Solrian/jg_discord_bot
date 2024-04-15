@@ -16,9 +16,10 @@ const dataManager = new DataManager(josshApiHandler, databaseHandler);
 const updateEvent = josshApiHandler.updateFoundEvent;
 
 updateEvent.on("newtimestamp", async () => {
-  console.log("new timestamp detected.");
+  console.log("newtimestamp detected.");
   if (!dataManager.isUpdating) dataManager.newGeneration();
   else console.log("Update Suspended - previous Update still running");
+  console.log("waiting for next server update");
 });
 
 var rl = readline.createInterface({
@@ -27,17 +28,18 @@ var rl = readline.createInterface({
 });
 
 function terminalInput() {
-  rl.question("", (input) => {
+  rl.question("", async (input) => {
     if (input == "exit") return rl.close();
     if (input == "listtables") {
       console.log(`executing: ${input}`);
-      databaseHandler.listTables();
+      let tables = await databaseHandler.listTables();
+      console.log(tables);
     } else if (input == "createtables") {
       console.log(`executing: ${input}`);
-      databaseHandler.createTables();
+      await databaseHandler.createTables();
     } else if (input == "droptables") {
       console.log(`executing: ${input}`);
-      databaseHandler.dropTables();
+      await databaseHandler.dropTables();
     }
     terminalInput();
   });
