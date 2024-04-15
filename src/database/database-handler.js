@@ -10,7 +10,7 @@ class DatabaseHandler {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-      let rows = await connection.query(`show tables from jg_data`);
+      let rows = await connection.query(`show tables`);
       await connection.query("COMMIT");
       return rows;
     } catch (err) {
@@ -411,7 +411,8 @@ class DatabaseHandler {
 
   async insertPilot(pilots) {
     let values = [];
-    for await (let pilot of pilots) {
+    for await (let rows of pilots) {
+      let pilot = rows.data;
       //catch unconsitencies of user.json
       if (pilot.number_launches >= 4294967294) pilot.number_launches = 0;
       values.push([

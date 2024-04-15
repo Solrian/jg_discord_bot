@@ -16,7 +16,7 @@ const dataManager = new DataManager(josshApiHandler, databaseHandler);
 const updateEvent = josshApiHandler.updateFoundEvent;
 
 updateEvent.on("newtimestamp", async () => {
-  console.log("newtimestamp detected.");
+  console.log("new timestamp detected.");
   if (!dataManager.isUpdating) dataManager.newGeneration();
   else console.log("Update Suspended - previous Update still running");
   console.log("waiting for next server update");

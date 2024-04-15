@@ -15,6 +15,21 @@ class JosshApiHandler {
   async getCurrentTS() {
     return await getMissionsTS();
   }
+  async getUserProfiles(callsigns) {
+    let urls = [];
+    for await (let callsign of callsigns) {
+      urls.push(
+        "http://jumpgate-tri.org/jossh-api/user-profile/" + callsign + ".json"
+      );
+    }
+    const requests = urls.map((url) => axios.get(url));
+    try {
+      const data = await axios.all(requests);
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
   async getUserProfile(callsign) {
     try {
       let url =

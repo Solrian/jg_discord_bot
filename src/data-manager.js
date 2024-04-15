@@ -108,24 +108,8 @@ class DataManager {
   async #savePilots(callsigns, withLog) {
     let tmp = Date.now();
     let count = 1;
-    let pilots = [];
-    for await (const callsign of callsigns) {
-      let pilot = await this.josshApiHandler.getUserProfile(callsign);
-      if (pilot) {
-        pilots.push(pilot);
-        if (withLog)
-          console.log(
-            Math.round((count / callsigns.length) * 100) +
-              "% (" +
-              count +
-              "/" +
-              callsigns.length +
-              ") " +
-              pilot.callsign
-          );
-      }
-      count++;
-    }
+
+    let pilots = await this.josshApiHandler.getUserProfiles(callsigns);
     console.log("pilots - get: " + (Date.now() - tmp) + "ms");
     tmp = Date.now();
     await this.databaseHandler.insertPilot(pilots);
@@ -165,18 +149,18 @@ class DataManager {
     for (const [pid, p] of Object.entries(posList)) {
       let tmp2 = Date.now();
       let pos = await this.josshApiHandler.getPos(p.url);
-      console.log(
-        Math.round((count / Object.entries(posList).length) * 100) +
-          "% (" +
-          count +
-          "/" +
-          Object.entries(posList).length +
-          ") " +
-          pos.name +
-          " " +
-          (Date.now() - tmp2) +
-          "ms"
-      );
+      //   console.log(
+      //     Math.round((count / Object.entries(posList).length) * 100) +
+      //       "% (" +
+      //       count +
+      //       "/" +
+      //       Object.entries(posList).length +
+      //       ") " +
+      //       pos.name +
+      //       " " +
+      //       (Date.now() - tmp2) +
+      //       "ms"
+      //   );
       count++;
       allPos.push([pid, p, pos]);
     }
@@ -389,7 +373,7 @@ class DataManager {
     console.log("pilots - compare: " + (Date.now() - tmp) + "ms");
     tmp = Date.now();
     if (changes.length > 0) {
-      console.log(changes);
+      //console.log(changes);
       await this.databaseHandler.insertPilotChanges(changes);
     }
     console.log("pilots - save changes: " + (Date.now() - tmp) + "ms");
@@ -421,6 +405,7 @@ class DataManager {
     console.log("stations - compare: " + (Date.now() - tmp) + "ms");
     tmp = Date.now();
     if (changes.length > 0) {
+      //console.log(changes);
       await this.databaseHandler.insertInventoryChanges(changes);
     }
     await this.databaseHandler.deleteOldInventory();
