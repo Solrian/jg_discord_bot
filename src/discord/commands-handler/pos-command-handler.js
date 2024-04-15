@@ -21,9 +21,10 @@ const items = capacitor
   .concat(shield);
 
 class PosCommandHandler {
-  constructor(interaction) {
+  constructor(interaction, databaseHandler) {
     this.name = "PosCommandHandler";
     this.interaction = interaction;
+    this.databaseHandler = databaseHandler;
   }
   async run() {
     try {

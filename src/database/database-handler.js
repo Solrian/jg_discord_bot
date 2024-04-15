@@ -955,6 +955,23 @@ class DatabaseHandler {
       await connection.release();
     }
   }
+
+  async getTopFromStat(stat, max) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `SELECT * from pilots order by ` + stat + ` desc Limit ` + max
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
 }
 
 export { DatabaseHandler };

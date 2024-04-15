@@ -1,7 +1,8 @@
 class BpcCommandHandler {
-  constructor(interaction) {
+  constructor(interaction, databaseHandler) {
     this.name = "BpcCommandHandler";
     this.interaction = interaction;
+    this.databaseHandler = databaseHandler;
   }
 
   async run() {

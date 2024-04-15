@@ -2,8 +2,10 @@ import { config } from "dotenv";
 import { REST, Routes, Client, IntentsBitField } from "discord.js";
 import bpcCommands from "./commands/bpc-command.js";
 import posCommands from "./commands/pos-command.js";
+import topCommands from "./commands/top-command.js";
 import { PosCommandHandler } from "./commands-handler/pos-command-handler.js";
 import { BpcCommandHandler } from "./commands-handler/bpc-command-handler.js";
+import { TopCommandHandler } from "./commands-handler/top-command-handler.js";
 
 class DiscordHandler {
   constructor(databaseHandler) {
@@ -24,7 +26,7 @@ class DiscordHandler {
 
   async startAsync() {
     this.client.login(process.env.DISCORD_BOT_TOKEN);
-    const commands = [bpcCommands, posCommands];
+    const commands = [bpcCommands, posCommands, topCommands];
     try {
       console.log("Started refreshing application (/) commands.");
       await this.rest.put(
@@ -43,11 +45,23 @@ class DiscordHandler {
     this.client.on("interactionCreate", async (interaction) => {
       try {
         if (interaction.commandName == "pos") {
-          const posHandler = new PosCommandHandler(interaction);
+          const posHandler = new PosCommandHandler(
+            interaction,
+            this.databaseHandler
+          );
           await posHandler.run();
         } else if (interaction.commandName == "bpc") {
-          const bpcHandler = new BpcCommandHandler(interaction);
+          const bpcHandler = new BpcCommandHandler(
+            interaction,
+            this.databaseHandler
+          );
           await bpcHandler.run();
+        } else if (interaction.commandName == "top") {
+          const topHandler = new TopCommandHandler(
+            interaction,
+            this.databaseHandler
+          );
+          await topHandler.run();
         }
       } catch (err) {
         console.log(err);
