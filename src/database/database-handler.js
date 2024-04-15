@@ -724,7 +724,7 @@ class DatabaseHandler {
       await connection.query("START TRANSACTION");
 
       await connection.query(
-        "insert into beacon_changes (generation, sector, newStatus, oldStatus) values (0,?,?,?)",
+        "insert into beacon_changes (generation, sector, newStatus, oldStatus) values ?",
         [values]
       );
       await connection.query("COMMIT");
@@ -744,7 +744,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
-        "insert into mission_changes (generation, faction, stat, newValue, oldValue) values (0,?,?,?,?)",
+        "insert into mission_changes (generation, faction, stat, newValue, oldValue) values ?",
         [values]
       );
       await connection.query("COMMIT");
