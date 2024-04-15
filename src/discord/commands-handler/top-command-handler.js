@@ -1,13 +1,93 @@
 const stats = [
   {
-    name: "flux",
+    name: "Experience",
+    dbprop: "experience",
+  },
+  {
+    name: "Solrain Pilots Kills",
+    dbprop: "killsSolrain",
+  },
+  {
+    name: "Octavius Pilots Kills",
+    dbprop: "killsOctavius",
+  },
+  {
+    name: "Quantar Pilots Kills",
+    dbprop: "killsQuantar",
+  },
+  {
+    name: "Credits",
+    dbprop: "credits",
+  },
+  {
+    name: "Shots Hit",
+    dbprop: "shotsHit",
+  },
+  {
+    name: "Shots Fired",
+    dbprop: "shotsFired",
+  },
+  {
+    name: "Missiles Hit",
+    dbprop: "missilesHit",
+  },
+  {
+    name: "Missiles Fired",
+    dbprop: "missilesFired",
+  },
+  {
+    name: "Missions Completed",
+    dbprop: "missionsCompleted",
+  },
+  {
+    name: "Missions Taken",
+    dbprop: "missionsFlown",
+  },
+  {
+    name: "Conflux Kills",
     dbprop: "confluxKills",
+  },
+  {
+    name: "Deaths",
+    dbprop: "deaths",
+  },
+  {
+    name: "Pures Mined",
+    dbprop: "pures",
+  },
+  {
+    name: "Artifacts Obtained",
+    dbprop: "artifacts",
+  },
+  {
+    name: "Beacons Held",
+    dbprop: "beacons",
+  },
+  {
+    name: "Bounty",
+    dbprop: "bounty",
+  },
+  {
+    name: "Launches",
+    dbprop: "launches",
+  },
+  {
+    name: "Landings",
+    dbprop: "landings",
+  },
+  {
+    name: "Disconnects",
+    dbprop: "disconnects",
+  },
+  {
+    name: "Playtime",
+    dbprop: "played",
   },
 ];
 
 class TopCommandHandler {
   constructor(interaction, databaseHandler) {
-    this.name = "BpcCommandHandler";
+    this.name = "TopCommandHandler";
     this.interaction = interaction;
     this.databaseHandler = databaseHandler;
   }
@@ -46,7 +126,7 @@ class TopCommandHandler {
         const focusedValue = this.interaction.options.getFocused();
         const choices = [];
         stats.forEach((stat) => {
-          choices.push(stat.name.toLowerCase());
+          choices.push(stat.name);
         });
         const filtered = choices.filter((choice) =>
           choice.startsWith(focusedValue)
