@@ -781,7 +781,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from pilots order by callsign, generation asc`
+        `select * from pilots where callsign in (select callsign from pilots group by callsign having count(generation)>1) order by callsign, generation asc`
       );
       await connection.query("COMMIT");
       return rows;

@@ -107,17 +107,27 @@ class DataManager {
   async #savePilots(callsigns, withLog) {
     let tmp = Date.now();
     let count = 0;
+    let logCount = 0;
+    let logCountMax = callsigns.length;
     let pilots = [];
     let promises = [];
-    console.log(callsigns.length + " pilots to load.");
+    console.log(logCountMax + " pilots to load.");
     while (callsigns.length > 0) {
       count++;
+      logCount++;
       promises.push(this.josshApiHandler.getUserProfile(callsigns.shift()));
-      if (count == 20) {
+      if (count == 100) {
         let ps = await Promise.all(promises);
         pilots.push(...ps);
         promises = [];
-        console.log(ps.length);
+        console.log(
+          Math.round((logCount / logCountMax) * 100, 2) +
+            "% (" +
+            logCount +
+            "/" +
+            logCountMax +
+            ") "
+        );
         count = 0;
       }
     }
@@ -159,12 +169,13 @@ class DataManager {
     let posList = await this.josshApiHandler.getPosList();
     let allPos = [];
     let promises = [];
+    1;
     let count = 0;
     console.log(Object.entries(posList).length + " pos to load.");
     for (const [pid, p] of Object.entries(posList)) {
       count++;
       promises.push(this.josshApiHandler.getPos(pid, p));
-      if (count == 20) {
+      if (count == 100) {
         let ps = await Promise.all(promises);
         for (let i = 0; i < ps.length; i++) {
           allPos.push([ps[i][0], ps[i][1], ps[i][2]]);
@@ -187,11 +198,11 @@ class DataManager {
     let tmp = Date.now();
     let pilots = await this.databaseHandler.getPilotsToCompare();
     let changes = [];
-    let cur;
-    let old;
+    console.log(pilots.length / 2);
     while (pilots.length > 1) {
-      cur = pilots.shift();
-      old = pilots.shift();
+      let cur = pilots.shift();
+      let old = pilots.shift();
+      console.log(cur.callsign + " " + old.callsign);
       if (cur.callsign != old.callsign) pilots.unshift(old);
       else {
         if (cur.isOnline != old.isOnline) {
