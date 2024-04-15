@@ -411,8 +411,7 @@ class DatabaseHandler {
 
   async insertPilot(pilots) {
     let values = [];
-    for await (let rows of pilots) {
-      let pilot = rows.data;
+    for await (let pilot of pilots) {
       //catch unconsitencies of user.json
       if (pilot.number_launches >= 4294967294) pilot.number_launches = 0;
       values.push([
@@ -453,6 +452,7 @@ class DatabaseHandler {
         pilot.time_ingame,
       ]);
     }
+    console.log(values.length);
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
@@ -594,10 +594,11 @@ class DatabaseHandler {
       await connection.release();
     }
   }
+
   async insertPos(allPos) {
     let posValues = [];
     let posInventoryValues = [];
-    for await (let tmp of allPos) {
+    for (let tmp of allPos) {
       let pid = tmp[0];
       let p = tmp[1];
       let pos = tmp[2];
@@ -616,7 +617,7 @@ class DatabaseHandler {
         pos.z,
       ]);
       if (pos.market.length > 0) {
-        for await (const item of pos.market) {
+        for (const item of pos.market) {
           posInventoryValues.push([
             0,
             pid,
@@ -628,6 +629,8 @@ class DatabaseHandler {
         }
       }
     }
+    console.log(posValues.length);
+    console.log(posInventoryValues.length);
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");

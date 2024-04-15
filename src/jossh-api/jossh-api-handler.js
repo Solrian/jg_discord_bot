@@ -16,19 +16,29 @@ class JosshApiHandler {
     return await getMissionsTS();
   }
   async getUserProfiles(callsigns) {
+    let tmp;
     let urls = [];
-    for await (let callsign of callsigns) {
+    let retVal;
+    let count = 0;
+    while (callsigns.length > 0) {
+      let callsign = callsigns.shift();
       urls.push(
         "http://jumpgate-tri.org/jossh-api/user-profile/" + callsign + ".json"
       );
+      count++;
+      if (count == 10) {
+        const requests = urls.map((url) => axios.get(url));
+        count = 0;
+        urls = [];
+        try {
+          const data = await axios.all(requests);
+          retVal = retVal + data;
+        } catch (error) {
+          console.log(error);
+        }
+      }
     }
-    const requests = urls.map((url) => axios.get(url));
-    try {
-      const data = await axios.all(requests);
-      return data;
-    } catch (error) {
-      console.log(error);
-    }
+    return retVal;
   }
   async getUserProfile(callsign) {
     try {
@@ -70,11 +80,24 @@ class JosshApiHandler {
       return console.error(error);
     }
   }
-  async getPos(posUrl) {
+  async getPosAll(posUrls) {
+    let urls = [];
+    for await (let posUrl of posUrls) {
+      urls.push("http://jumpgate-tri.org" + posUrl);
+    }
+    const requests = urls.map((url) => axios.get(url));
     try {
-      let url = "http://jumpgate-tri.org" + posUrl;
-      const { data } = await axios.get(url);
+      const data = await axios.all(requests);
       return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async getPos(pid, pos) {
+    try {
+      let url = "http://jumpgate-tri.org" + pos.url;
+      const { data } = await axios.get(url);
+      return [pid, pos, data];
     } catch (error) {
       return console.error(error);
     }

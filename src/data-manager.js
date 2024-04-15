@@ -96,7 +96,6 @@ class DataManager {
     await this.#saveMissions();
     await this.#compareMissions();
   }
-
   async #initPos() {
     await this.#savePos();
   }
@@ -107,9 +106,23 @@ class DataManager {
 
   async #savePilots(callsigns, withLog) {
     let tmp = Date.now();
-    let count = 1;
-
-    let pilots = await this.josshApiHandler.getUserProfiles(callsigns);
+    let count = 0;
+    let pilots = [];
+    let promises = [];
+    console.log(callsigns.length + " pilots to load.");
+    while (callsigns.length > 0) {
+      count++;
+      promises.push(this.josshApiHandler.getUserProfile(callsigns.shift()));
+      if (count == 20) {
+        let ps = await Promise.all(promises);
+        pilots.push(...ps);
+        promises = [];
+        console.log(ps.length);
+        count = 0;
+      }
+    }
+    let ps = await Promise.all(promises);
+    pilots.push(...ps);
     console.log("pilots - get: " + (Date.now() - tmp) + "ms");
     tmp = Date.now();
     await this.databaseHandler.insertPilot(pilots);
@@ -145,31 +158,31 @@ class DataManager {
     let tmp = Date.now();
     let posList = await this.josshApiHandler.getPosList();
     let allPos = [];
-    let count = 1;
+    let promises = [];
+    let count = 0;
+    console.log(Object.entries(posList).length + " pos to load.");
     for (const [pid, p] of Object.entries(posList)) {
-      let tmp2 = Date.now();
-      let pos = await this.josshApiHandler.getPos(p.url);
-      //   console.log(
-      //     Math.round((count / Object.entries(posList).length) * 100) +
-      //       "% (" +
-      //       count +
-      //       "/" +
-      //       Object.entries(posList).length +
-      //       ") " +
-      //       pos.name +
-      //       " " +
-      //       (Date.now() - tmp2) +
-      //       "ms"
-      //   );
       count++;
-      allPos.push([pid, p, pos]);
+      promises.push(this.josshApiHandler.getPos(pid, p));
+      if (count == 20) {
+        let ps = await Promise.all(promises);
+        for (let i = 0; i < ps.length; i++) {
+          allPos.push([ps[i][0], ps[i][1], ps[i][2]]);
+        }
+        promises = [];
+        count = 0;
+      }
     }
+    let ps = await Promise.all(promises);
+    for (let i = 0; i < ps.length; i++) {
+      allPos.push([ps[i][0], ps[i][1], ps[i][2]]);
+    }
+
     console.log("pos - get: " + (Date.now() - tmp) + "ms");
     tmp = Date.now();
     await this.databaseHandler.insertPos(allPos);
     console.log("pos - save: " + (Date.now() - tmp) + "ms");
   }
-
   async #comparePilots() {
     let tmp = Date.now();
     let pilots = await this.databaseHandler.getPilotsToCompare();
@@ -528,6 +541,14 @@ class DataManager {
     await this.databaseHandler.deleteOldPosData();
     console.log("pos - save changes: " + (Date.now() - tmp) + "ms");
   }
+}
+
+function wait(millisec) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve("");
+    }, millisec);
+  });
 }
 
 export { DataManager };
