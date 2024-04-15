@@ -797,7 +797,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from inventory order by id, station, generation asc`
+        `SELECT * from inventory where generation in (0,1) order by id, station, generation asc`
       );
       await connection.query("COMMIT");
       return rows;
@@ -813,7 +813,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from sector_links order by sector1, sector2, generation asc`
+        `SELECT * from sector_links where generation in (0,1) order by sector1, sector2, generation asc`
       );
       await connection.query("COMMIT");
       return rows;
@@ -829,7 +829,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from beacons order by sector, generation asc`
+        `SELECT * from beacons where generation in (0,1) order by sector, generation asc`
       );
       await connection.query("COMMIT");
       return rows;
@@ -845,7 +845,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from pos_inventory order by posid, name, generation asc`
+        `SELECT * from pos_inventory where generation in (0,1) order by posid, name, generation asc`
       );
       await connection.query("COMMIT");
       return rows;
@@ -861,7 +861,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from missions order by faction, generation asc`
+        `SELECT * from missions where generation in (0,1)  order by faction, generation asc`
       );
       await connection.query("COMMIT");
       return rows;
