@@ -31,6 +31,8 @@ class DataManager {
     ]);
   }
   async #update(lastTS) {
+    console.log("updating data.");
+    let tmp = Date.now();
     await Promise.all([
       this.#updatePilots(lastTS),
       this.#updateInventory(),
@@ -38,6 +40,8 @@ class DataManager {
       this.#updateMap(),
       this.#updatePos(),
     ]);
+    console.log("update complete.");
+    console.log("time needed: " + (Date.now() - tmp) + "ms");
   }
   async #initPilots() {
     let users = await this.josshApiHandler.getAllUsers();
