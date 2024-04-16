@@ -14,12 +14,29 @@ const josshApiHandler = new JosshApiHandler();
 const dataManager = new DataManager(josshApiHandler, databaseHandler);
 
 const updateEvent = josshApiHandler.updateFoundEvent;
+const updateDoneEvent = dataManager.updateDoneEvent;
 
 updateEvent.on("newtimestamp", async () => {
   console.log("new timestamp detected.");
   if (!dataManager.isUpdating) dataManager.newGeneration();
   else console.log("Update Suspended - previous Update still running");
   console.log("waiting for next server update");
+});
+
+updateDoneEvent.on("pilots", async (b) => {
+  console.log("pilots updated : " + b);
+});
+updateDoneEvent.on("inventory", async (b) => {
+  console.log("inventory updated : " + b);
+});
+updateDoneEvent.on("map", async (b) => {
+  console.log("map updated : " + b);
+});
+updateDoneEvent.on("missions", async (b) => {
+  console.log("missions updated : " + b);
+});
+updateDoneEvent.on("pos", async (b) => {
+  console.log("pos updated : " + b);
 });
 
 var rl = readline.createInterface({
