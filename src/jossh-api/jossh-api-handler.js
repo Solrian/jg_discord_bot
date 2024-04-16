@@ -15,31 +15,6 @@ class JosshApiHandler {
   async getCurrentTS() {
     return await getMissionsTS();
   }
-  async getUserProfiles(callsigns) {
-    let tmp;
-    let urls = [];
-    let retVal;
-    let count = 0;
-    while (callsigns.length > 0) {
-      let callsign = callsigns.shift();
-      urls.push(
-        "http://jumpgate-tri.org/jossh-api/user-profile/" + callsign + ".json"
-      );
-      count++;
-      if (count == 10) {
-        const requests = urls.map((url) => axios.get(url));
-        count = 0;
-        urls = [];
-        try {
-          const data = await axios.all(requests);
-          retVal = retVal + data;
-        } catch (error) {
-          console.log(error);
-        }
-      }
-    }
-    return retVal;
-  }
   async getUserProfile(callsign) {
     try {
       let url =
@@ -78,19 +53,6 @@ class JosshApiHandler {
       return data;
     } catch (error) {
       return console.error(error);
-    }
-  }
-  async getPosAll(posUrls) {
-    let urls = [];
-    for await (let posUrl of posUrls) {
-      urls.push("http://jumpgate-tri.org" + posUrl);
-    }
-    const requests = urls.map((url) => axios.get(url));
-    try {
-      const data = await axios.all(requests);
-      return data;
-    } catch (error) {
-      console.log(error);
     }
   }
   async getPos(pid, pos) {

@@ -6,7 +6,7 @@ import readline from "readline";
 
 const databaseHandler = new DatabaseHandler();
 let tables = await databaseHandler.listTables();
-if (tables.length < 14) {
+if (tables.length < 15) {
   await databaseHandler.createTables();
 }
 const discordHandler = new DiscordHandler(databaseHandler);

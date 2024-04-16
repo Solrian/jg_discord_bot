@@ -267,6 +267,20 @@ class DatabaseHandler {
           return console.log(result);
         }
       );
+      connection.query(
+        "create table leaderboard (" +
+          "callsign varchar(50), " +
+          "days float(4,2), " +
+          "stat varchar(50), " +
+          "score int(11) " +
+          ") ",
+        (err, result, fields) => {
+          if (err) {
+            return console.log(err);
+          }
+          return console.log(result);
+        }
+      );
     } catch (err) {
       await connection.query("ROLLBACK");
       if (err) console.error(err);
@@ -401,6 +415,69 @@ class DatabaseHandler {
       );
       await connection.query("COMMIT");
       return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+
+  async getGenerationFromTimelog(date) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `SELECT max(generation) gen from timelog where time > ? limit 1`,
+        date
+      );
+      await connection.query("COMMIT");
+      if (rows.length > 0) return rows[0].gen;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async getPilotChanges(stats, gen) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `select a.* from pilot_changes a
+        inner join (
+SELECT min(generation) as minGen, max(generation) as maxGen, callsign, stat
+from pilot_changes
+where stat in ?
+    and generation < ?
+GROUP BY callsign, stat
+) b
+on a.callsign = b.callsign
+and a.stat = b.stat
+and a.generation in (b.minGen, b.maxGen)
+order by callsign, stat, generation`,
+        [[stats], gen]
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async insertLeaderboard(rows) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query("delete from leaderboard");
+      await connection.query(
+        "insert into leaderboard (callsign, days, stat, score) values ?",
+        [rows]
+      );
+      await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");
       if (err) console.error(err);
@@ -594,7 +671,6 @@ class DatabaseHandler {
       await connection.release();
     }
   }
-
   async insertPos(allPos) {
     let posValues = [];
     let posInventoryValues = [];

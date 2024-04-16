@@ -14,9 +14,10 @@ class DataManager {
       await this.databaseHandler.addNewGeneration(currentTS);
       await this.#initialize();
       console.log("Initial Run Done! Waiting for next update interval");
-    } else if (currentTS != lastTS) {
-      await this.databaseHandler.addNewGeneration(currentTS);
-      await this.#update(lastTS);
+    } else if (currentTS || lastTS) {
+      //await this.databaseHandler.addNewGeneration(currentTS);
+      //await this.#update(lastTS);
+      await this.#calculateLeaderboards(currentTS);
       await this.databaseHandler.deleteChanges(1000);
     }
     this.isUpdating = false;
@@ -43,6 +44,132 @@ class DataManager {
     console.log("update complete.");
     console.log("time needed: " + (Date.now() - tmp) + "ms");
   }
+
+  async #calculateLeaderboards(currentTS) {
+    let currentDate = new Date(currentTS.replace(" ", "T"));
+    let currentTime = currentDate.getTime();
+    let boards = [
+      {
+        timespan: 0.25,
+        time: currentTime - 1000 * 60 * 60 * 24 * 0.25,
+        id: "1146844121928040548",
+      },
+      {
+        timespan: 1,
+        time: currentTime - 1000 * 60 * 60 * 24 * 1,
+        id: "1146568343449509979",
+      },
+      {
+        timespan: 7,
+        time: currentTime - 1000 * 60 * 60 * 24 * 7,
+        id: "1146541249151635556",
+      },
+    ];
+    let boardStats = [
+      ["played"],
+      ["confluxKills"],
+      ["beacons"],
+      ["shotsHit", "shotsFired"],
+      ["missions"],
+      ["missilesHit", "missilesFired"],
+      ["pures"],
+      ["artifacts"],
+      ["credits", "played"],
+      ["experience", "played"],
+      ["deaths"],
+    ];
+    let values = [];
+    for (let board of boards) {
+      let date = new Date(board.time);
+      console.log("from: " + date);
+      console.log("to: " + currentDate);
+      let pastGen = await this.databaseHandler.getGenerationFromTimelog(date);
+      let rows = await this.databaseHandler.getPilotChanges(
+        [
+          "played",
+          "confluxKills",
+          "beacons",
+          "shotsHit",
+          "shotsFired",
+          "missions",
+          "missilesHit",
+          "missilesFired",
+          "pures",
+          "artifacts",
+          "credits",
+          "experience",
+          "deaths",
+        ],
+        pastGen
+      );
+      for (let stats of boardStats) {
+        if (stats.length == 1) {
+          let statRows = rows
+            .filter((x) => x.stat == stats[0])
+            .sort((a, b) => {
+              if (a.callsign < b.callsign) return -1;
+              if (a.callsign > b.callsign) return 1;
+              if (a.generation < b.generation) return -1;
+              if (a.generation > b.generation) return 1;
+            });
+          while (statRows.length > 1) {
+            let newest = statRows.shift();
+            let oldest = statRows.shift();
+            if (newest.callsign != oldest.callsign) {
+              statRows.unshift(oldest);
+              oldest = newest;
+            }
+            let score = parseInt(newest.newValue - oldest.oldValue, 10);
+            if (score > 0)
+              values.push([newest.callsign, board.timespan, stats[0], score]);
+          }
+        } else if (stats.length == 2) {
+          let statRows1 = rows.filter((x) => x.stat == stats[0]);
+          while (statRows1.length > 1) {
+            let score = 0;
+            let score1 = 0;
+            let score2 = 0;
+            let newest1 = statRows1.shift();
+            let oldest1 = statRows1.shift();
+            if (newest1.callsign != oldest1.callsign) {
+              statRows1.unshift(oldest1);
+              oldest1 = newest1;
+            }
+            let statRow2 = rows.filter(
+              (x) => x.callsign == newest1.callsign && x.stat == stats[1]
+            );
+            let newest2 = statRow2.shift();
+            let oldest2 = statRow2.shift();
+            if (oldest2) {
+              if (newest2.callsign != oldest2.callsign) {
+                statRows1.unshift(oldest2);
+                oldest2 = newest2;
+              }
+              score1 = parseInt(newest1.newValue - oldest1.oldValue, 10);
+              score2 = parseInt(newest2.newValue - oldest2.oldValue, 10);
+            }
+
+            if (score1 > 0 && score2 > 0) {
+              if (stats[1] == "shotsFired" || stats[1] == "MissilesFired") {
+                score = parseInt((score1 / score2) * 100, 10);
+              } else if (stats[1] == "Played") {
+                score = parseInt(score1 / score2, 10);
+              }
+              if (score > 0)
+                values.push([
+                  newest1.callsign,
+                  board.timespan,
+                  stats[0],
+                  score,
+                ]);
+            }
+          }
+        }
+      }
+      await this.databaseHandler.insertLeaderboard(values);
+    }
+  }
+
   async #initPilots() {
     let users = await this.josshApiHandler.getAllUsers();
     let pilotsToCheck = [];
@@ -112,6 +239,7 @@ class DataManager {
     let pilots = [];
     let promises = [];
     console.log(logCountMax + " pilots to load.");
+    console.log(callsigns);
     while (callsigns.length > 0) {
       count++;
       logCount++;
@@ -120,14 +248,15 @@ class DataManager {
         try {
           pilots.push(...(await Promise.all(promises)));
           promises = [];
-          console.log(
-            Math.round((logCount / logCountMax) * 100, 2) +
-              "% (" +
-              logCount +
-              "/" +
-              logCountMax +
-              ") "
-          );
+          if (withLog)
+            console.log(
+              Math.round((logCount / logCountMax) * 100, 2) +
+                "% (" +
+                logCount +
+                "/" +
+                logCountMax +
+                ") "
+            );
           count = 0;
         } catch (err) {
           if (err) console.error(err);
