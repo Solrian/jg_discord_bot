@@ -338,29 +338,8 @@ class DatabaseHandler {
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-      connection.query(`update timelog set generation = generation + 1`);
-      connection.query(`update pilots set generation = generation + 1`);
-      connection.query(`update pilot_changes set generation = generation + 1`);
-      connection.query(`update inventory set generation = generation + 1`);
-      connection.query(
-        `update inventory_changes set generation = generation + 1`
-      );
-      connection.query(`update pos set generation = generation + 1`);
-      connection.query(`update pos_inventory set generation = generation + 1`);
-      connection.query(
-        `update pos_inventory_changes set generation = generation + 1`
-      );
-      connection.query(`update sector_links set generation = generation + 1`);
-      connection.query(
-        `update sector_link_changes set generation = generation + 1`
-      );
-      connection.query(`update beacons set generation = generation + 1`);
-      connection.query(`update beacon_changes set generation = generation + 1`);
-      connection.query(`update missions set generation = generation + 1`);
-      connection.query(
-        `update mission_changes set generation = generation + 1`
-      );
-      connection.query(
+      await connection.query(`update timelog set generation = generation + 1`);
+      await connection.query(
         `insert into timelog (generation, time) values (0,?)`,
         timestamp
       );
@@ -642,6 +621,7 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
+      await connection.query(`update pilots set generation = generation + 1`);
       await connection.query(
         "insert into pilots (" +
           "generation, " +
@@ -708,6 +688,9 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
+        `update inventory set generation = generation + 1`
+      );
+      await connection.query(
         "insert into inventory (generation, id, station, itemgroup, name, price, amount, produce) values ?",
         [values]
       );
@@ -727,6 +710,9 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
+      await connection.query(
+        `update sector_links set generation = generation + 1`
+      );
       await connection.query(
         "insert into sector_links (generation, sector1, sector2) values ?",
         [values]
@@ -748,6 +734,7 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
+      await connection.query(`update beacons set generation = generation + 1`);
       await connection.query(
         "insert into beacons (generation, sector, status) values ?",
         [values]
@@ -768,6 +755,7 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
+      await connection.query(`update missions set generation = generation + 1`);
       await connection.query(
         "insert into missions (generation, faction, text, complete) values ?",
         [values]
@@ -817,9 +805,13 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
+      await connection.query(`update pos set generation = generation + 1`);
       await connection.query(
         "insert into pos (generation, posid, name, permission, size, rearm, refuel, repair, sector, x, y, z) values ?",
         [posValues]
+      );
+      await connection.query(
+        `update pos_inventory set generation = generation + 1`
       );
       await connection.query(
         "insert into pos_inventory (generation, posid, itemgroup, name, price, amount) values ?",
@@ -842,7 +834,9 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-
+      await connection.query(
+        `update pilot_changes set generation = generation + 1`
+      );
       await connection.query(
         "insert into pilot_changes (generation, callsign, stat, newValue, oldValue) values ?",
         [values]
@@ -863,7 +857,9 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-
+      await connection.query(
+        `update inventory_changes set generation = generation + 1`
+      );
       await connection.query(
         "insert into inventory_changes (generation, station, name, stat, newValue, oldValue) values ?",
         [values]
@@ -885,6 +881,9 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
+        `update sector_link_changes set generation = generation + 1`
+      );
+      await connection.query(
         "insert into sector_link_changes (generation, sector1, sector2, isActive) values ?",
         [values]
       );
@@ -905,7 +904,9 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-
+      await connection.query(
+        `update beacon_changes set generation = generation + 1`
+      );
       await connection.query(
         "insert into beacon_changes (generation, sector, newStatus, oldStatus) values ?",
         [values]
@@ -927,6 +928,9 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
+        `update mission_changes set generation = generation + 1`
+      );
+      await connection.query(
         "insert into mission_changes (generation, faction, stat, newValue, oldValue) values ?",
         [values]
       );
@@ -946,6 +950,9 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
+      await connection.query(
+        `update pos_inventory_changes set generation = generation + 1`
+      );
       await connection.query(
         "insert into pos_inventory_changes (generation, posid, name, stat, newValue, oldValue) values ?",
         [values]
