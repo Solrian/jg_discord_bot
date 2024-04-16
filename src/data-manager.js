@@ -124,7 +124,17 @@ class DataManager {
                 values.push([newest.callsign, board.timespan, stats[0], score]);
           }
         } else if (stats.length == 2) {
-          let statRows1 = rows.filter((x) => x.stat == stats[0]);
+          let statRows1 = rows
+            .filter((x) => x.stat == stats[0])
+            .sort((a, b) => {
+              if (a.callsign < b.callsign) return -1;
+              if (a.callsign > b.callsign) return 1;
+              if (a.generation < b.generation) return -1;
+              if (a.generation > b.generation) return 1;
+            });
+          if (stats[0] == "experience" && board.timespan == 0.25) {
+            console.log(statRows1);
+          }
           while (statRows1.length > 1) {
             let score = 0;
             let score1 = 0;
@@ -135,11 +145,21 @@ class DataManager {
               statRows1.unshift(oldest1);
               oldest1 = newest1;
             }
-            let statRow2 = rows.filter(
-              (x) => x.callsign == newest1.callsign && x.stat == stats[1]
-            );
-            let newest2 = statRow2.shift();
-            let oldest2 = statRow2.shift();
+            let statRows2 = rows
+              .filter(
+                (x) => x.callsign == newest1.callsign && x.stat == stats[1]
+              )
+              .sort((a, b) => {
+                if (a.callsign < b.callsign) return -1;
+                if (a.callsign > b.callsign) return 1;
+                if (a.generation < b.generation) return -1;
+                if (a.generation > b.generation) return 1;
+              });
+            if (stats[0] == "experience" && board.timespan == 0.25) {
+              console.log(statRows2);
+            }
+            let newest2 = statRows2.shift();
+            let oldest2 = statRows2.shift();
             if (oldest2) {
               if (newest2.callsign != oldest2.callsign) {
                 statRows1.unshift(oldest2);
@@ -152,7 +172,7 @@ class DataManager {
             if (score1 > 0 && score2 > 0) {
               if (stats[1] == "shotsFired" || stats[1] == "MissilesFired") {
                 score = parseInt((score1 / score2) * 100, 10);
-              } else if (stats[1] == "Played") {
+              } else if (stats[1] == "played") {
                 score = parseInt(score1 / score2, 10);
               }
               if (score > 0)

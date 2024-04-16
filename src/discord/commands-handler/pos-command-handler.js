@@ -51,7 +51,12 @@ class PosCommandHandler {
             "\n";
           if (retString.length + tmp.length > 1024) {
             embed.addFields({
-              name: this.interaction.options.get("item").value,
+              name:
+                this.interaction.options.get("item").value +
+                " " +
+                (this.interaction.options.get("public").value
+                  ? "public"
+                  : "private/squad"),
               value: retString,
               inline: false,
             });
@@ -64,7 +69,12 @@ class PosCommandHandler {
         }
         if (retString != "") {
           embed.addFields({
-            name: this.interaction.options.get("item").value,
+            name:
+              this.interaction.options.get("item").value +
+              " " +
+              (this.interaction.options.get("public").value
+                ? "public"
+                : "private/squad"),
             value: retString,
             inline: false,
           });
