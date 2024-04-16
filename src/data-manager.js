@@ -109,13 +109,15 @@ class DataManager {
               if (a.generation < b.generation) return -1;
               if (a.generation > b.generation) return 1;
             });
-          while (statRows.length > 1) {
+          while (statRows.length > 0) {
             let newest = statRows.shift();
             let oldest = statRows.shift();
-            if (newest.callsign != oldest.callsign) {
-              statRows.unshift(oldest);
-              oldest = newest;
-            }
+            if (oldest) {
+              if (newest.callsign != oldest.callsign) {
+                statRows.unshift(oldest);
+                oldest = newest;
+              }
+            } else oldest = newest;
             let score = parseInt(newest.newValue - oldest.oldValue, 10);
             if (score > 0)
               if (
@@ -132,19 +134,18 @@ class DataManager {
               if (a.generation < b.generation) return -1;
               if (a.generation > b.generation) return 1;
             });
-          if (stats[0] == "experience" && board.timespan == 0.25) {
-            console.log(statRows1);
-          }
-          while (statRows1.length > 1) {
+          while (statRows1.length > 0) {
             let score = 0;
             let score1 = 0;
             let score2 = 0;
             let newest1 = statRows1.shift();
             let oldest1 = statRows1.shift();
-            if (newest1.callsign != oldest1.callsign) {
-              statRows1.unshift(oldest1);
-              oldest1 = newest1;
-            }
+            if (oldest1) {
+              if (newest1.callsign != oldest1.callsign) {
+                statRows1.unshift(oldest1);
+                oldest1 = newest1;
+              }
+            } else oldest1 = newest1;
             let statRows2 = rows
               .filter(
                 (x) => x.callsign == newest1.callsign && x.stat == stats[1]
@@ -155,9 +156,6 @@ class DataManager {
                 if (a.generation < b.generation) return -1;
                 if (a.generation > b.generation) return 1;
               });
-            if (stats[0] == "experience" && board.timespan == 0.25) {
-              console.log(statRows2);
-            }
             let newest2 = statRows2.shift();
             let oldest2 = statRows2.shift();
             if (oldest2) {
@@ -165,12 +163,11 @@ class DataManager {
                 statRows1.unshift(oldest2);
                 oldest2 = newest2;
               }
-              score1 = parseInt(newest1.newValue - oldest1.oldValue, 10);
-              score2 = parseInt(newest2.newValue - oldest2.oldValue, 10);
-            }
-
+            } else oldest2 = newest2;
+            score1 = parseInt(newest1.newValue - oldest1.oldValue, 10);
+            score2 = parseInt(newest2.newValue - oldest2.oldValue, 10);
             if (score1 > 0 && score2 > 0) {
-              if (stats[1] == "shotsFired" || stats[1] == "MissilesFired") {
+              if (stats[1] == "shotsFired" || stats[1] == "missilesFired") {
                 score = parseInt((score1 / score2) * 100, 10);
               } else if (stats[1] == "played") {
                 score = parseInt(score1 / score2, 10);
@@ -408,12 +405,12 @@ class DataManager {
             old.ratingQuantar,
           ]);
         }
-        if (cur.RatingAmananth != old.RatingAmananth) {
+        if (cur.ratingAmananth != old.ratingAmananth) {
           changes.push([
             cur.callsign,
-            "RatingAmananth",
-            cur.RatingAmananth,
-            old.RatingAmananth,
+            "ratingAmananth",
+            cur.ratingAmananth,
+            old.ratingAmananth,
           ]);
         }
         if (cur.ratingHyperial != old.ratingHyperial) {
