@@ -1,3 +1,5 @@
+import { EmbedBuilder } from "@discordjs/builders";
+
 import capacitor from "../../data/items/capacitor.js";
 import commodities from "../../data/items/commodities.js";
 import ecm from "../../data/items/ecm.js";
@@ -30,10 +32,62 @@ class PosCommandHandler {
     try {
       if (this.interaction.isChatInputCommand()) {
         await this.interaction.deferReply({ ephemeral: true });
-        await this.interaction.editReply({
-          content: `${this.interaction.options.get("item").value}`,
-          ephemeral: true,
-        });
+        let dbrows =
+          await this.databaseHandler.getPosInventoryByItemNameAndPermission(
+            this.interaction.options.get("item").value,
+            this.interaction.options.get("public").value
+          );
+        let embeds = [];
+        let embed = new EmbedBuilder();
+        let retString = "";
+        for (let i = 0; i < dbrows.length; i++) {
+          let tmp =
+            dbrows[i].posName.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") +
+            " : " +
+            dbrows[i].amount +
+            "x " +
+            dbrows[i].price +
+            "c" +
+            "\n";
+          if (retString.length + tmp.length > 1024) {
+            embed.addFields({
+              name: this.interaction.options.get("item").value,
+              value: retString,
+              inline: false,
+            });
+            embeds.push(embed);
+            embed = new EmbedBuilder();
+            retString = tmp;
+          } else {
+            retString += tmp;
+          }
+        }
+        if (retString != "") {
+          embed.addFields({
+            name: this.interaction.options.get("item").value,
+            value: retString,
+            inline: false,
+          });
+          embeds.push(embed);
+          let count = 1;
+          let msgCount = embeds.length;
+          while (embeds.length > 0) {
+            let e = embeds.shift();
+            e.setTitle(count + " / " + msgCount);
+            if (count == 1) {
+              await this.interaction.editReply({
+                embeds: [e],
+                ephemeral: true,
+              });
+            } else {
+              await this.interaction.followUp({
+                embeds: [e],
+                ephemeral: true,
+              });
+            }
+            count++;
+          }
+        }
       } else if (this.interaction.isAutocomplete()) {
         const focusedValue = this.interaction.options.getFocused();
         const choices = [];

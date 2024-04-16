@@ -107,26 +107,28 @@ class TopCommandHandler {
         let embeds = [];
         let embed = new EmbedBuilder();
         let retString = "";
-        for (let i = 0; i < max; i++) {
-          let tmp =
-            "#" +
-            (i + 1) +
-            ": " +
-            dbrows[i][stat].toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") +
-            " (" +
-            dbrows[i].callsign +
-            ")\n";
-          if (retString.length + tmp.length > 1024) {
-            embed.addFields({
-              name: "Alltime Top " + max + " " + stat,
-              value: retString,
-              inline: false,
-            });
-            embeds.push(embed);
-            embed = new EmbedBuilder();
-            retString = tmp;
-          } else {
-            retString += tmp;
+        for (let i = 0; i < dbrows.length; i++) {
+          if (dbrows[i][stat] > 0) {
+            let tmp =
+              "#" +
+              (i + 1) +
+              ": " +
+              dbrows[i][stat].toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") +
+              " (" +
+              dbrows[i].callsign +
+              ")\n";
+            if (retString.length + tmp.length > 1024) {
+              embed.addFields({
+                name: "Alltime Top " + max + " " + stat,
+                value: retString,
+                inline: false,
+              });
+              embeds.push(embed);
+              embed = new EmbedBuilder();
+              retString = tmp;
+            } else {
+              retString += tmp;
+            }
           }
         }
         if (retString != "") {

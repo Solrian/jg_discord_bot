@@ -14,7 +14,7 @@ const posCommands = new SlashCommandBuilder()
     option
       .setName("public")
       .setDescription("public POS only? standard: True")
-      .setRequired(false)
+      .setRequired(true)
   );
 
 export default posCommands.toJSON();

@@ -490,9 +490,44 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `select * from leaderboard where stat = ? and days = ? order by score desc limit ?`,
+        `select * from leaderboard where stat = ? and days = ? order by score desc, callsign asc limit ?`,
         values
       );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async getPosInventoryByItemNameAndPermission(itemName, permission) {
+    const connection = await mysql.connection();
+    let rows = [];
+    try {
+      await connection.query("START TRANSACTION");
+      if (permission) {
+        rows = await connection.query(
+          `select b.name posName, b.permission, a.name itemName, a.amount, a.price
+            from pos_inventory a
+            inner join pos b
+            on a.posid = b.posid
+            and permission in ("public")
+            where a.name = ?`,
+          itemName
+        );
+      } else {
+        rows = await connection.query(
+          `select b.name posName, b.permission, a.name itemName, a.amount, a.price
+            from pos_inventory a
+            inner join pos b
+            on a.posid = b.posid
+            and permission in ("private", "squad")
+            where a.name = ?`,
+          itemName
+        );
+      }
       await connection.query("COMMIT");
       return rows;
     } catch (err) {
@@ -1054,7 +1089,10 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT * from pilots order by ` + stat + ` desc Limit ` + max
+        `SELECT * from pilots order by ` +
+          stat +
+          ` desc, callsign asc Limit ` +
+          max
       );
       await connection.query("COMMIT");
       return rows;
