@@ -138,8 +138,8 @@ class DiscordHandler {
                 else if (hours > 0) score = hours + "h " + minutes + "min";
                 else score = minutes + "min";
               } else if (
-                board.stat == "ShotsHit" ||
-                board.stat == "MissilesHit"
+                board.stat == "shotsHit" ||
+                board.stat == "missilesHit"
               ) {
                 score = score + "%";
               }
