@@ -25,6 +25,7 @@ updateEvent.on("newtimestamp", async () => {
 
 updateDoneEvent.on("pilots", async (b) => {
   console.log("pilots updated : " + b);
+  discordHandler.updateLeaderboards();
 });
 updateDoneEvent.on("inventory", async (b) => {
   console.log("inventory updated : " + b);

@@ -56,17 +56,14 @@ class DataManager {
       {
         timespan: 0.25,
         time: currentTime - 1000 * 60 * 60 * 24 * 0.25,
-        id: "1146844121928040548",
       },
       {
         timespan: 1,
         time: currentTime - 1000 * 60 * 60 * 24 * 1,
-        id: "1146568343449509979",
       },
       {
         timespan: 7,
         time: currentTime - 1000 * 60 * 60 * 24 * 7,
-        id: "1146541249151635556",
       },
     ];
     let boardStats = [

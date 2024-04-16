@@ -485,6 +485,23 @@ order by callsign, stat, generation`,
       await connection.release();
     }
   }
+  async getTopFromLeaderboard(values) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `select * from leaderboard where stat = ? and days = ? order by score desc limit ?`,
+        values
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
 
   async insertPilot(pilots) {
     let values = [];
