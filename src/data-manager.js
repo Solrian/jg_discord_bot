@@ -249,7 +249,6 @@ class DataManager {
     let pilots = [];
     let promises = [];
     console.log(logCountMax + " pilots to load.");
-    console.log(callsigns);
     while (callsigns.length > 0) {
       count++;
       logCount++;

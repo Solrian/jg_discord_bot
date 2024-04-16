@@ -20,6 +20,25 @@ class DatabaseHandler {
       await connection.release();
     }
   }
+  async listLinkChanges() {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `select b.time, a.* from sector_link_changes a
+        inner join timelog b
+        on a.generation = b.generation
+        order by generation`
+      );
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
   async createTables() {
     const connection = await mysql.connection();
     try {
@@ -620,7 +639,6 @@ order by callsign, stat, generation`,
         pilot.time_ingame,
       ]);
     }
-    console.log(values.length);
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
@@ -796,8 +814,6 @@ order by callsign, stat, generation`,
         }
       }
     }
-    console.log(posValues.length);
-    console.log(posInventoryValues.length);
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");

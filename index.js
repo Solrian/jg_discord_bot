@@ -58,6 +58,10 @@ function terminalInput() {
     } else if (input == "droptables") {
       console.log(`executing: ${input}`);
       await databaseHandler.dropTables();
+    } else if (input == "links") {
+      console.log(`executing: ${input}`);
+      let links = await databaseHandler.listLinkChanges();
+      console.log(links);
     }
     terminalInput();
   });

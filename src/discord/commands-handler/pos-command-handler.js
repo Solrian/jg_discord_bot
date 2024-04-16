@@ -89,16 +89,23 @@ class PosCommandHandler {
           }
         } else {
           await this.interaction.editReply({
-            content: "nothing found",
+            content:
+              "nothing found for: " +
+              this.interaction.options.get("item").value,
             ephemeral: true,
           });
         }
       } else if (this.interaction.isAutocomplete()) {
         const focusedValue = this.interaction.options.getFocused();
         const choices = [];
-        items.forEach((item) => {
-          choices.push(item.name.toLowerCase());
-        });
+        items
+          .sort((a, b) => {
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+          })
+          .forEach((item) => {
+            choices.push(item.name.toLowerCase());
+          });
         const filtered = choices.filter((choice) =>
           choice.startsWith(focusedValue)
         );
