@@ -1,86 +1,88 @@
+import { EmbedBuilder } from "@discordjs/builders";
+
 const stats = [
   {
-    name: "Experience",
+    name: "experience",
     dbprop: "experience",
   },
   {
-    name: "Solrain Pilots Kills",
+    name: "solrain pilots kills",
     dbprop: "killsSolrain",
   },
   {
-    name: "Octavius Pilots Kills",
+    name: "octavius pilots kills",
     dbprop: "killsOctavius",
   },
   {
-    name: "Quantar Pilots Kills",
+    name: "quantar pilots kills",
     dbprop: "killsQuantar",
   },
   {
-    name: "Credits",
+    name: "credits",
     dbprop: "credits",
   },
   {
-    name: "Shots Hit",
+    name: "shots hit",
     dbprop: "shotsHit",
   },
   {
-    name: "Shots Fired",
+    name: "shots fired",
     dbprop: "shotsFired",
   },
   {
-    name: "Missiles Hit",
+    name: "missiles hit",
     dbprop: "missilesHit",
   },
   {
-    name: "Missiles Fired",
+    name: "missiles fired",
     dbprop: "missilesFired",
   },
   {
-    name: "Missions Completed",
+    name: "missions completed",
     dbprop: "missionsCompleted",
   },
   {
-    name: "Missions Taken",
+    name: "missions zaken",
     dbprop: "missionsFlown",
   },
   {
-    name: "Conflux Kills",
+    name: "conflux kills",
     dbprop: "confluxKills",
   },
   {
-    name: "Deaths",
+    name: "deaths",
     dbprop: "deaths",
   },
   {
-    name: "Pures Mined",
+    name: "pures mined",
     dbprop: "pures",
   },
   {
-    name: "Artifacts Obtained",
+    name: "artifacts obtained",
     dbprop: "artifacts",
   },
   {
-    name: "Beacons Held",
+    name: "beacons held",
     dbprop: "beacons",
   },
   {
-    name: "Bounty",
+    name: "bounty",
     dbprop: "bounty",
   },
   {
-    name: "Launches",
+    name: "launches",
     dbprop: "launches",
   },
   {
-    name: "Landings",
+    name: "landings",
     dbprop: "landings",
   },
   {
-    name: "Disconnects",
+    name: "disconnects",
     dbprop: "disconnects",
   },
   {
-    name: "Playtime",
+    name: "playtime",
     dbprop: "played",
   },
 ];
@@ -102,9 +104,11 @@ class TopCommandHandler {
         ).dbprop;
         if (max > 200) max = 200;
         let dbrows = await this.databaseHandler.getTopFromStat(stat, max);
-        let retString = "Top " + max + " " + stat + "\n";
+        let embeds = [];
+        let embed = new EmbedBuilder();
+        let retString = "";
         for (let i = 0; i < max; i++) {
-          retString +=
+          let tmp =
             "#" +
             (i + 1) +
             ": " +
@@ -112,15 +116,44 @@ class TopCommandHandler {
             " (" +
             dbrows[i].callsign +
             ")\n";
+          if (retString.length + tmp.length > 1024) {
+            embed.addFields({
+              name: "Alltime Top " + max + " " + stat,
+              value: retString,
+              inline: false,
+            });
+            embeds.push(embed);
+            embed = new EmbedBuilder();
+            retString = tmp;
+          } else {
+            retString += tmp;
+          }
         }
         if (retString != "") {
-          if (retString.length > 2000) {
-            retString = retString.substring(0, 2000);
-          }
-          await this.interaction.editReply({
-            content: retString,
-            ephemeral: true,
+          embed.addFields({
+            name: "Alltime Top " + max + " " + stat,
+            value: retString,
+            inline: false,
           });
+          embeds.push(embed);
+          let count = 1;
+          let msgCount = embeds.length;
+          while (embeds.length > 0) {
+            let e = embeds.shift();
+            e.setTitle(count + " / " + msgCount);
+            if (count == 1) {
+              await this.interaction.editReply({
+                embeds: [e],
+                ephemeral: true,
+              });
+            } else {
+              await this.interaction.followUp({
+                embeds: [e],
+                ephemeral: true,
+              });
+            }
+            count++;
+          }
         }
       } else if (this.interaction.isAutocomplete()) {
         const focusedValue = this.interaction.options.getFocused();

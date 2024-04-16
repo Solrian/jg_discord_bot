@@ -74,6 +74,7 @@ class DiscordHandler {
     });
   }
   async updateLeaderboards() {
+    let tmp = Date.now();
     console.log("updating discord leaderboard messages");
     let posts = [
       {
@@ -170,6 +171,7 @@ class DiscordHandler {
         console.log(error);
       }
     }
+    console.log("leaderboards updated : " + (Date.now() - tmp) + "ms");
   }
 }
 

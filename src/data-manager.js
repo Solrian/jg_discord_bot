@@ -36,7 +36,7 @@ class DataManager {
     ]);
   }
   async #update(currentTS, lastTS) {
-    console.log("updating data.");
+    console.log("updating data...");
     let tmp = Date.now();
     await Promise.all([
       this.#updatePilots(currentTS, lastTS),
@@ -45,8 +45,6 @@ class DataManager {
       this.#updateMissions(),
       this.#updatePos(),
     ]);
-    console.log("update complete.");
-    console.log("time needed: " + (Date.now() - tmp) + "ms");
   }
 
   async #calculateLeaderboards(currentTS) {
@@ -55,15 +53,15 @@ class DataManager {
     let boards = [
       {
         timespan: 0.25,
-        time: currentTime - 1000 * 60 * 60 * 24 * 0.25,
+        time: currentTime - 1000 * 60 * 54 * 24 * 0.25,
       },
       {
         timespan: 1,
-        time: currentTime - 1000 * 60 * 60 * 24 * 1,
+        time: currentTime - 1000 * 60 * 54 * 24 * 1,
       },
       {
         timespan: 7,
-        time: currentTime - 1000 * 60 * 60 * 24 * 7,
+        time: currentTime - 1000 * 60 * 54 * 24 * 7,
       },
     ];
     let boardStats = [
