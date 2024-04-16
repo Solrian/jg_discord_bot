@@ -510,24 +510,63 @@ order by callsign, stat, generation`,
       if (permission) {
         rows = await connection.query(
           `select b.name posName, b.permission, a.name itemName, a.amount, a.price
-            from pos_inventory a
-            inner join pos b
-            on a.posid = b.posid
-            and permission in ("public")
-            where a.name = ?`,
+          from pos_inventory a
+          inner join (select posid, name, min(generation) minGen from pos_inventory group by posid, name) c
+          on a.posid = c.posid
+          and a.name = c.name
+          and a.generation = c.minGen
+          inner join pos b
+          on a.posid = b.posid
+          and a.generation = b.generation
+          and permission in ("public")
+          and a.name = ?
+          order by b.name`,
           itemName
         );
+        1;
       } else {
         rows = await connection.query(
           `select b.name posName, b.permission, a.name itemName, a.amount, a.price
-            from pos_inventory a
-            inner join pos b
-            on a.posid = b.posid
-            and permission in ("private", "squad")
-            where a.name = ?`,
+          from pos_inventory a
+          inner join (select posid, name, min(generation) minGen from pos_inventory group by posid, name) c
+          on a.posid = c.posid
+          and a.name = c.name
+          and a.generation = c.minGen
+          inner join pos b
+          on a.posid = b.posid
+          and a.generation = b.generation
+          and permission in ("private", "squad")
+          and a.name = ?
+          order by b.name`,
           itemName
         );
       }
+      await connection.query("COMMIT");
+      return rows;
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async getTopFromStat(stat, limit) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      let rows = await connection.query(
+        `select a.callsign, a.` +
+          stat +
+          ` from pilots a 
+        inner join (select callsign, min(generation) minGen from pilots group by callsign) b
+        on a.callsign = b.callsign
+        and a.generation = b.minGen
+        order by a.` +
+          stat +
+          ` desc, a.callsign ASC
+        limit ` +
+          limit
+      );
       await connection.query("COMMIT");
       return rows;
     } catch (err) {
@@ -1076,26 +1115,6 @@ order by callsign, stat, generation`,
       await connection.query("delete from pos where generation > 0");
       await connection.query("delete from pos_inventory where generation > 0");
       await connection.query("COMMIT");
-    } catch (err) {
-      await connection.query("ROLLBACK");
-      if (err) console.error(err);
-    } finally {
-      await connection.release();
-    }
-  }
-
-  async getTopFromStat(stat, max) {
-    const connection = await mysql.connection();
-    try {
-      await connection.query("START TRANSACTION");
-      let rows = await connection.query(
-        `SELECT * from pilots order by ` +
-          stat +
-          ` desc, callsign asc Limit ` +
-          max
-      );
-      await connection.query("COMMIT");
-      return rows;
     } catch (err) {
       await connection.query("ROLLBACK");
       if (err) console.error(err);

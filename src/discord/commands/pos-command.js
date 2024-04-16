@@ -13,7 +13,7 @@ const posCommands = new SlashCommandBuilder()
   .addBooleanOption((option) =>
     option
       .setName("public")
-      .setDescription("public POS only? standard: True")
+      .setDescription("public POS only?")
       .setRequired(true)
   );
 

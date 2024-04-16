@@ -22,7 +22,7 @@ class DataManager {
     } else if (currentTS != lastTS) {
       await this.databaseHandler.addNewGeneration(currentTS);
       await this.#update(currentTS, lastTS);
-      await this.databaseHandler.deleteChanges(1000);
+      await this.databaseHandler.deleteChanges(1680);
     }
     this.isUpdating = false;
   }
@@ -53,15 +53,15 @@ class DataManager {
     let boards = [
       {
         timespan: 0.25,
-        time: currentTime - 1000 * 60 * 54 * 24 * 0.25,
+        time: currentTime - 1000 * 60 * 60 * 24 * 0.25 - 360000,
       },
       {
         timespan: 1,
-        time: currentTime - 1000 * 60 * 54 * 24 * 1,
+        time: currentTime - 1000 * 60 * 60 * 24 * 1 - 360000,
       },
       {
         timespan: 7,
-        time: currentTime - 1000 * 60 * 54 * 24 * 7,
+        time: currentTime - 1000 * 60 * 60 * 24 * 7 - 360000,
       },
     ];
     let boardStats = [
@@ -118,7 +118,10 @@ class DataManager {
             }
             let score = parseInt(newest.newValue - oldest.oldValue, 10);
             if (score > 0)
-              values.push([newest.callsign, board.timespan, stats[0], score]);
+              if (
+                !(stats[0] == "played" && score >= 60 * 24 * board.timespan - 2)
+              )
+                values.push([newest.callsign, board.timespan, stats[0], score]);
           }
         } else if (stats.length == 2) {
           let statRows1 = rows.filter((x) => x.stat == stats[0]);

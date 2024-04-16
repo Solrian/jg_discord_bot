@@ -87,6 +87,11 @@ class PosCommandHandler {
             }
             count++;
           }
+        } else {
+          await this.interaction.editReply({
+            content: "nothing found",
+            ephemeral: true,
+          });
         }
       } else if (this.interaction.isAutocomplete()) {
         const focusedValue = this.interaction.options.getFocused();
