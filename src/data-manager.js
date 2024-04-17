@@ -37,7 +37,6 @@ class DataManager {
   }
   async #update(currentTS, lastTS) {
     console.log("updating data...");
-    let tmp = Date.now();
     await Promise.all([
       this.#updatePilots(currentTS, lastTS),
       this.#updateInventory(),
@@ -613,6 +612,7 @@ class DataManager {
     }
     if (changes.length > 0) {
       await this.databaseHandler.insertSectorLinksChanges(changes);
+      eventEmitter.emit("newLinkChanges", changes);
     }
     await this.databaseHandler.deleteOldSectorLinks();
   }

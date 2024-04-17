@@ -39,6 +39,12 @@ updateDoneEvent.on("missions", async (b) => {
 updateDoneEvent.on("pos", async (b) => {
   console.log("pos updated : " + b);
 });
+updateDoneEvent.on("newLinkChanges", async (b) => {
+  while (b.length > 0) {
+    let change = b.shift();
+    discordHandler.notifyLinkChange(change);
+  }
+});
 
 var rl = readline.createInterface({
   input: process.stdin,

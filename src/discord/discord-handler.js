@@ -173,6 +173,19 @@ class DiscordHandler {
     }
     console.log("leaderboards updated : " + (Date.now() - tmp) + "ms");
   }
+  async notifyLinkChange(change) {
+    let embed = new EmbedBuilder();
+    embed.addFields({
+      name: "Link " + (change[2] == 0 ? "dropped" : "restored"),
+      value: change[0] + " to " + change[1],
+      inline: false,
+    });
+    let channel = this.client.channels.cache.get(
+      process.env.CHANNEL_ID_INFESTS
+    );
+    embed.setTitle("Infest " + (change[2] == 0 ? "appeared" : "destroyed"));
+    await channel.send({ embeds: [embed] });
+  }
 }
 
 export { DiscordHandler };

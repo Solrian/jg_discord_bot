@@ -409,7 +409,7 @@ class DatabaseHandler {
     try {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
-        `SELECT distinct callsign from pilot_changes where generation <= 25`
+        `SELECT distinct callsign from pilot_changes where stat = 'played' and generation <= 25`
       );
       await connection.query("COMMIT");
       return rows;
