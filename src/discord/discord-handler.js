@@ -3,6 +3,7 @@ import { REST, Routes, Client, IntentsBitField } from "discord.js";
 import bpcCommands from "./commands/bpc-command.js";
 import posCommands from "./commands/pos-command.js";
 import topCommands from "./commands/top-command.js";
+import testCommands from "./commands/test-command.js";
 import { PosCommandHandler } from "./commands-handler/pos-command-handler.js";
 import { BpcCommandHandler } from "./commands-handler/bpc-command-handler.js";
 import { TopCommandHandler } from "./commands-handler/top-command-handler.js";
@@ -36,7 +37,7 @@ class DiscordHandler {
           process.env.GUILD_ID
         ),
         {
-          body: commands,
+          body: [],
         }
       );
     } catch (err) {
@@ -46,23 +47,20 @@ class DiscordHandler {
     this.client.on("interactionCreate", async (interaction) => {
       try {
         if (interaction.commandName == "pos") {
-          const posHandler = new PosCommandHandler(
-            interaction,
-            this.databaseHandler
-          );
-          await posHandler.run();
+          new PosCommandHandler(interaction, this.databaseHandler).run();
         } else if (interaction.commandName == "bpc") {
-          const bpcHandler = new BpcCommandHandler(
-            interaction,
-            this.databaseHandler
-          );
-          await bpcHandler.run();
+          new BpcCommandHandler(interaction, this.databaseHandler).run();
         } else if (interaction.commandName == "top") {
-          const topHandler = new TopCommandHandler(
-            interaction,
-            this.databaseHandler
-          );
-          await topHandler.run();
+          new TopCommandHandler(interaction, this.databaseHandler).run();
+        } else if (interaction.commandName == "test") {
+          console.log("interaction : test");
+          if (interaction.isChatInputCommand()) {
+            await interaction.deferReply({ ephemeral: true });
+            await interaction.editReply({
+              content: "nothing found",
+              ephemeral: true,
+            });
+          }
         }
       } catch (err) {
         console.log(err);
@@ -184,7 +182,7 @@ class DiscordHandler {
       process.env.CHANNEL_ID_INFESTS
     );
     embed.setTitle("Infest " + (change[2] == 0 ? "appeared" : "destroyed"));
-    await channel.send({ embeds: [embed] });
+    await channel.send({ content: "@everyone", embeds: [embed] });
   }
 }
 

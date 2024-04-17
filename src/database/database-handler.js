@@ -835,9 +835,6 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
-        `update pilot_changes set generation = generation + 1`
-      );
-      await connection.query(
         "insert into pilot_changes (generation, callsign, stat, newValue, oldValue) values ?",
         [values]
       );
@@ -858,9 +855,6 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
-        `update inventory_changes set generation = generation + 1`
-      );
-      await connection.query(
         "insert into inventory_changes (generation, station, name, stat, newValue, oldValue) values ?",
         [values]
       );
@@ -872,7 +866,7 @@ order by callsign, stat, generation`,
       await connection.release();
     }
   }
-  async insertSectorLinksChanges(changes) {
+  async insertSectorLinkChanges(changes) {
     let values = [];
     for await (let change of changes) {
       values.push([0, change[0], change[1], change[2]]);
@@ -880,9 +874,6 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-      await connection.query(
-        `update sector_link_changes set generation = generation + 1`
-      );
       await connection.query(
         "insert into sector_link_changes (generation, sector1, sector2, isActive) values ?",
         [values]
@@ -905,9 +896,6 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
-        `update beacon_changes set generation = generation + 1`
-      );
-      await connection.query(
         "insert into beacon_changes (generation, sector, newStatus, oldStatus) values ?",
         [values]
       );
@@ -927,9 +915,6 @@ order by callsign, stat, generation`,
     const connection = await mysql.connection();
     try {
       await connection.query("START TRANSACTION");
-      await connection.query(
-        `update mission_changes set generation = generation + 1`
-      );
       await connection.query(
         "insert into mission_changes (generation, faction, stat, newValue, oldValue) values ?",
         [values]
@@ -951,12 +936,22 @@ order by callsign, stat, generation`,
     try {
       await connection.query("START TRANSACTION");
       await connection.query(
-        `update pos_inventory_changes set generation = generation + 1`
-      );
-      await connection.query(
         "insert into pos_inventory_changes (generation, posid, name, stat, newValue, oldValue) values ?",
         [values]
       );
+      await connection.query("COMMIT");
+    } catch (err) {
+      await connection.query("ROLLBACK");
+      if (err) console.error(err);
+    } finally {
+      await connection.release();
+    }
+  }
+  async addGeneration(table) {
+    const connection = await mysql.connection();
+    try {
+      await connection.query("START TRANSACTION");
+      await connection.query(`update ${table} set generation = generation + 1`);
       await connection.query("COMMIT");
     } catch (err) {
       await connection.query("ROLLBACK");

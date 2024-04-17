@@ -538,6 +538,7 @@ class DataManager {
         await this.databaseHandler.deleteOldPilotProfile(cur.callsign);
       }
     }
+    await this.databaseHandler.addGeneration("pilot_changes");
     if (changes.length > 0) {
       console.log(changes);
       await this.databaseHandler.insertPilotChanges(changes);
@@ -566,6 +567,7 @@ class DataManager {
         }
       }
     }
+    await this.databaseHandler.addGeneration("inventory_changes");
     if (changes.length > 0) {
       //console.log(changes);
       await this.databaseHandler.insertInventoryChanges(changes);
@@ -587,6 +589,7 @@ class DataManager {
           changes.push([cur.sector, cur.status, old.status]);
       }
     }
+    await this.databaseHandler.addGeneration("beacon_changes");
     if (changes.length > 0) {
       console.log(changes);
       await this.databaseHandler.insertBeaconChanges(changes);
@@ -610,8 +613,10 @@ class DataManager {
           changes.push([cur.sector1, cur.sector2, 0]);
       }
     }
+    await this.databaseHandler.addGeneration("sector_link_changes");
     if (changes.length > 0) {
-      await this.databaseHandler.insertSectorLinksChanges(changes);
+      console.log(changes);
+      await this.databaseHandler.insertSectorLinkChanges(changes);
       eventEmitter.emit("newLinkChanges", changes);
     }
     await this.databaseHandler.deleteOldSectorLinks();
@@ -632,6 +637,7 @@ class DataManager {
         }
       }
     }
+    await this.databaseHandler.addGeneration("mission_changes");
     if (changes.length > 0) {
       console.log(changes);
       await this.databaseHandler.insertMissionChanges(changes);
@@ -672,6 +678,7 @@ class DataManager {
           changes.push([cur.posid, cur.name, "amount", 0, cur.amount]);
       }
     }
+    await this.databaseHandler.addGeneration("pos_inventory_changes");
     if (changes.length > 0) {
       console.log(changes);
       await this.databaseHandler.insertPosInventoryChanges(changes);
