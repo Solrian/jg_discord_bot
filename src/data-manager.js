@@ -155,29 +155,31 @@ class DataManager {
                 if (a.generation < b.generation) return -1;
                 if (a.generation > b.generation) return 1;
               });
-            let newest2 = statRows2.shift();
-            let oldest2 = statRows2.shift();
-            if (oldest2) {
-              if (newest2.callsign != oldest2.callsign) {
-                statRows1.unshift(oldest2);
-                oldest2 = newest2;
+            if (statRows2.length > 0) {
+              let newest2 = statRows2.shift();
+              let oldest2 = statRows2.shift();
+              if (oldest2) {
+                if (newest2.callsign != oldest2.callsign) {
+                  statRows1.unshift(oldest2);
+                  oldest2 = newest2;
+                }
+              } else oldest2 = newest2;
+              score1 = parseInt(newest1.newValue - oldest1.oldValue, 10);
+              score2 = parseInt(newest2.newValue - oldest2.oldValue, 10);
+              if (score1 > 0 && score2 > 0) {
+                if (stats[1] == "shotsFired" || stats[1] == "missilesFired") {
+                  score = parseInt((score1 / score2) * 100, 10);
+                } else if (stats[1] == "played") {
+                  score = parseInt(score1 / score2, 10);
+                }
+                if (score > 0)
+                  values.push([
+                    newest1.callsign,
+                    board.timespan,
+                    stats[0],
+                    score,
+                  ]);
               }
-            } else oldest2 = newest2;
-            score1 = parseInt(newest1.newValue - oldest1.oldValue, 10);
-            score2 = parseInt(newest2.newValue - oldest2.oldValue, 10);
-            if (score1 > 0 && score2 > 0) {
-              if (stats[1] == "shotsFired" || stats[1] == "missilesFired") {
-                score = parseInt((score1 / score2) * 100, 10);
-              } else if (stats[1] == "played") {
-                score = parseInt(score1 / score2, 10);
-              }
-              if (score > 0)
-                values.push([
-                  newest1.callsign,
-                  board.timespan,
-                  stats[0],
-                  score,
-                ]);
             }
           }
         }
@@ -265,6 +267,7 @@ class DataManager {
     let pilots = [];
     let promises = [];
     console.log(logCountMax + " pilots to load.");
+    console.log(callsigns);
     while (callsigns.length > 0) {
       count++;
       logCount++;
