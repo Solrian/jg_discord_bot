@@ -103,7 +103,8 @@ async function getMissionsTS() {
   try {
     let url = "http://jumpgate-tri.org/jossh-api/missions.json";
     const { data } = await axios.get(url);
-    return data.last_update;
+    if (data) return data.last_update;
+    else return null;
   } catch (error) {
     return console.error(error);
   }

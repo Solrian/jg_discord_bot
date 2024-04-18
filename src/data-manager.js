@@ -13,16 +13,18 @@ class DataManager {
   async newGeneration() {
     this.isUpdating = true;
     let currentTS = await this.josshApiHandler.getCurrentTS();
-    let lastTS = await this.databaseHandler.getCurrentTS();
-    if (!lastTS) {
-      console.log("Starting Initial Run");
-      await this.databaseHandler.addNewGeneration(currentTS);
-      await this.#initialize();
-      console.log("Initial Run Done! Waiting for next update interval");
-    } else if (currentTS != lastTS) {
-      await this.databaseHandler.addNewGeneration(currentTS);
-      await this.#update(currentTS, lastTS);
-      await this.databaseHandler.deleteChanges(1680);
+    if (currentTS) {
+      let lastTS = await this.databaseHandler.getCurrentTS();
+      if (!lastTS) {
+        console.log("Starting Initial Run");
+        await this.databaseHandler.addNewGeneration(currentTS);
+        await this.#initialize();
+        console.log("Initial Run Done! Waiting for next update interval");
+      } else if (currentTS != lastTS) {
+        await this.databaseHandler.addNewGeneration(currentTS);
+        await this.#update(currentTS, lastTS);
+        await this.databaseHandler.deleteChanges(1680);
+      }
     }
     this.isUpdating = false;
   }
@@ -202,7 +204,7 @@ class DataManager {
     let lastTime = lastDate.getTime();
     let users = await this.josshApiHandler.getAllUsers();
     let pilotsToCheck = [];
-    if (users.length > 0) {
+    if (users) {
       //get callsigns to check from alluserlist
       for await (const user of users) {
         let userDate = new Date(user.updated_time.replace(" ", "T"));
@@ -300,49 +302,53 @@ class DataManager {
   }
   async #saveInventory() {
     let items = await this.josshApiHandler.getStationsInventory();
-    await this.databaseHandler.insertInventory(items);
+    if (items) await this.databaseHandler.insertInventory(items);
   }
   async #saveMap() {
     let map = await this.josshApiHandler.getMap();
-    await this.databaseHandler.insertSectorLinks(map.sector_links);
-    let sectors = Object.values(map.sectors);
-    await this.databaseHandler.insertBeacons(sectors);
+    if (map) {
+      await this.databaseHandler.insertSectorLinks(map.sector_links);
+      let sectors = Object.values(map.sectors);
+      await this.databaseHandler.insertBeacons(sectors);
+    }
   }
   async #saveMissions() {
     let missions = await this.josshApiHandler.getMissions();
-    await this.databaseHandler.insertMissions(missions);
+    if (missions) await this.databaseHandler.insertMissions(missions);
   }
   async #savePos() {
     let posList = await this.josshApiHandler.getPosList();
-    let allPos = [];
-    let promises = [];
-    let count = 0;
-    console.log(Object.entries(posList).length + " pos to load.");
-    for (const [pid, p] of Object.entries(posList)) {
-      count++;
-      promises.push(this.josshApiHandler.getPos(pid, p));
-      if (count == 30) {
-        try {
-          let ps = await Promise.all(promises);
-          for (let i = 0; i < ps.length; i++) {
-            allPos.push([ps[i][0], ps[i][1], ps[i][2]]);
+    if (posList) {
+      let allPos = [];
+      let promises = [];
+      let count = 0;
+      console.log(Object.entries(posList).length + " pos to load.");
+      for (const [pid, p] of Object.entries(posList)) {
+        count++;
+        promises.push(this.josshApiHandler.getPos(pid, p));
+        if (count == 30) {
+          try {
+            let ps = await Promise.all(promises);
+            for (let i = 0; i < ps.length; i++) {
+              allPos.push([ps[i][0], ps[i][1], ps[i][2]]);
+            }
+            promises = [];
+            count = 0;
+          } catch (err) {
+            if (err) console.error(err);
           }
-          promises = [];
-          count = 0;
-        } catch (err) {
-          if (err) console.error(err);
         }
       }
-    }
-    try {
-      let ps = await Promise.all(promises);
-      for (let i = 0; i < ps.length; i++) {
-        allPos.push([ps[i][0], ps[i][1], ps[i][2]]);
+      try {
+        let ps = await Promise.all(promises);
+        for (let i = 0; i < ps.length; i++) {
+          allPos.push([ps[i][0], ps[i][1], ps[i][2]]);
+        }
+      } catch (err) {
+        if (err) console.error(err);
       }
-    } catch (err) {
-      if (err) console.error(err);
+      await this.databaseHandler.insertPos(allPos);
     }
-    await this.databaseHandler.insertPos(allPos);
   }
   async #comparePilots() {
     let pilots = await this.databaseHandler.getPilotsToCompare();
