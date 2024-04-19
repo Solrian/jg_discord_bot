@@ -552,7 +552,6 @@ order by callsign, stat, generation`,
           order by b.name`,
           itemName
         );
-        1;
       } else {
         rows = await connection.query(
           `select b.name posName, b.permission, a.name itemName, a.amount, a.price

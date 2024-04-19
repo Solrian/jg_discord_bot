@@ -182,7 +182,7 @@ class DiscordHandler {
       process.env.CHANNEL_ID_INFESTS
     );
     embed.setTitle("Infest " + (change[2] == 0 ? "appeared" : "destroyed"));
-    await channel.send({ content: "@everyone", embeds: [embed] });
+    await channel.send({ embeds: [embed] });
   }
 }
 
