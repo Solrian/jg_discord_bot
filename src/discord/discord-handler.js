@@ -37,7 +37,7 @@ class DiscordHandler {
           process.env.GUILD_ID
         ),
         {
-          body: [],
+          body: commands,
         }
       );
     } catch (err) {
@@ -173,15 +173,25 @@ class DiscordHandler {
   }
   async notifyLinkChange(change) {
     let embed = new EmbedBuilder();
+    embed.setTitle("Infest " + (change[2] == 0 ? "appeared" : "destroyed"));
     embed.addFields({
       name: "Link " + (change[2] == 0 ? "dropped" : "restored"),
       value: change[0] + " to " + change[1],
       inline: false,
     });
+    let callsigns = await this.databaseHandler.getPossibleInfestDestroyer();
+    let callsignString = "";
+    while (callsigns.length > 0) {
+      callsignString += callsigns.shift().callsign + "\n";
+    }
+    embed.addFields({
+      name: "possible contributors :",
+      value: callsignString.length > 0 ? callsignString : "unknown",
+      inline: false,
+    });
     let channel = this.client.channels.cache.get(
       process.env.CHANNEL_ID_INFESTS
     );
-    embed.setTitle("Infest " + (change[2] == 0 ? "appeared" : "destroyed"));
     await channel.send({ embeds: [embed] });
   }
 }

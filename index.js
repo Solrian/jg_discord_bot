@@ -40,9 +40,13 @@ updateDoneEvent.on("pos", async (b) => {
   console.log("pos updated : " + b);
 });
 updateDoneEvent.on("newLinkChanges", async (b) => {
+  while (dataManager.isUpdating) {
+    console.log("waiting for updates to finish");
+    await wait(2000);
+  }
   while (b.length > 0) {
     let change = b.shift();
-    discordHandler.notifyLinkChange(change);
+    await discordHandler.notifyLinkChange(change);
   }
 });
 
@@ -50,6 +54,14 @@ var rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
+
+function wait(millisec) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve("");
+    }, millisec);
+  });
+}
 
 function terminalInput() {
   rl.question("", async (input) => {
