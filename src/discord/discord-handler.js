@@ -37,7 +37,7 @@ class DiscordHandler {
           process.env.GUILD_ID
         ),
         {
-          body: commands,
+          body: [],
         }
       );
     } catch (err) {
@@ -185,7 +185,7 @@ class DiscordHandler {
       callsignString += callsigns.shift().callsign + "\n";
     }
     embed.addFields({
-      name: "possible contributors :",
+      name: "Possible destroyers :",
       value: callsignString.length > 0 ? callsignString : "unknown",
       inline: false,
     });

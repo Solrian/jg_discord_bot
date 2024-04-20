@@ -472,7 +472,7 @@ class DatabaseHandler {
       await connection.query("START TRANSACTION");
       let rows = await connection.query(
         `select a.callsign from pilots a
-        left join (SELECT * from pilot_changes where (stat = 'missilesHit' or (stat = 'experience' and (newValue - oldValue)> 2500) )and generation in (0) order by callsign) b
+        left join (SELECT * from pilot_changes where (stat = 'missilesHit' or (stat = 'experience' and (newValue - oldValue)>= 5000) )and generation in (0) order by callsign) b
         on a.callsign = b.callsign
         group by a.callsign
         having count(a.callsign) > 1`
@@ -532,20 +532,22 @@ order by callsign, stat, generation`,
     }
   }
   async insertLeaderboard(rows) {
-    const connection = await mysql.connection();
-    try {
-      await connection.query("START TRANSACTION");
-      await connection.query("delete from leaderboard");
-      await connection.query(
-        "insert into leaderboard (callsign, days, stat, score) values ?",
-        [rows]
-      );
-      await connection.query("COMMIT");
-    } catch (err) {
-      await connection.query("ROLLBACK");
-      if (err) console.error(err);
-    } finally {
-      await connection.release();
+    if (rows.length > 0) {
+      const connection = await mysql.connection();
+      try {
+        await connection.query("START TRANSACTION");
+        await connection.query("delete from leaderboard");
+        await connection.query(
+          "insert into leaderboard (callsign, days, stat, score) values ?",
+          [rows]
+        );
+        await connection.query("COMMIT");
+      } catch (err) {
+        await connection.query("ROLLBACK");
+        if (err) console.error(err);
+      } finally {
+        await connection.release();
+      }
     }
   }
   async getTopFromLeaderboard(values) {
