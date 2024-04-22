@@ -42,7 +42,7 @@ const stats = [
     dbprop: "missionsCompleted",
   },
   {
-    name: "missions zaken",
+    name: "missions taken",
     dbprop: "missionsFlown",
   },
   {
@@ -92,6 +92,13 @@ class TopCommandHandler {
     this.name = "TopCommandHandler";
     this.interaction = interaction;
     this.databaseHandler = databaseHandler;
+    stats.sort((a, b) => {
+      const name1 = a.name.toUpperCase();
+      const name2 = b.name.toUpperCase();
+      if (name1 < name2) return -1;
+      if (name1 > name2) return 1;
+      return 0;
+    });
   }
 
   async run() {

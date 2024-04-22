@@ -37,7 +37,7 @@ class DiscordHandler {
           process.env.GUILD_ID
         ),
         {
-          body: [],
+          body: commands,
         }
       );
     } catch (err) {
