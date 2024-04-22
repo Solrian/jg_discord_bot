@@ -7,6 +7,7 @@ import testCommands from "./commands/test-command.js";
 import { PosCommandHandler } from "./commands-handler/pos-command-handler.js";
 import { BpcCommandHandler } from "./commands-handler/bpc-command-handler.js";
 import { TopCommandHandler } from "./commands-handler/top-command-handler.js";
+import { TestCommandHandler } from "./commands-handler/test-command-handler.js";
 import { EmbedBuilder } from "@discordjs/builders";
 
 class DiscordHandler {
@@ -54,13 +55,7 @@ class DiscordHandler {
           new TopCommandHandler(interaction, this.databaseHandler).run();
         } else if (interaction.commandName == "test") {
           console.log("interaction : test");
-          if (interaction.isChatInputCommand()) {
-            await interaction.deferReply({ ephemeral: true });
-            await interaction.editReply({
-              content: "nothing found",
-              ephemeral: true,
-            });
-          }
+          new TestCommandHandler(interaction, this.databaseHandler).run();
         }
       } catch (err) {
         console.log(err);

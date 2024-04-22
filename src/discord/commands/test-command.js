@@ -2,9 +2,6 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 
 const testCommands = new SlashCommandBuilder()
   .setName("test")
-  .setDescription("test command")
-  .addStringOption((option) =>
-    option.setName("testoption").setDescription("test option").setRequired(true)
-  );
+  .setDescription("test command");
 
 export default testCommands.toJSON();
